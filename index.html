@@ -28,7 +28,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { User, Send, CheckCircle, AlertCircle, Calendar, Layers, Award, Search, Edit3, Lock, AlertTriangle, KeyRound, BookOpen, Info, Target, ListChecks, Layout } from 'lucide-react';
+        import { User, Send, CheckCircle, AlertCircle, Calendar, Layers, Award, Search, Edit3, Lock, AlertTriangle, KeyRound, BookOpen, Info, Target, ListChecks, Layout, Phone, Mail } from 'lucide-react';
 
         // ==========================================
         //  CONFIGURACIÓN DEL SERVIDOR
@@ -86,7 +86,7 @@
             const [validationError, setValidationError] = useState('');
             const [duplicateError, setDuplicateError] = useState(false);
             const [formData, setFormData] = useState({
-                nombre: '', codigoRegistro: '', semestre: '',
+                nombre: '', codigoRegistro: '', telefono: '', email: '', semestre: '',
                 anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: ''
             });
             const [approvedSubjects, setApprovedSubjects] = useState(new Set());
@@ -106,7 +106,6 @@
                 setFormData(prev => ({ ...prev, semestre: currentSem, asignaturasAprobadas: approvedArray.join(', ') }));
             }, [approvedSubjects]);
 
-            // VALIDACIÓN AÑO vs CÓDIGO
             useEffect(() => {
                 const { codigoRegistro, anioIngreso } = formData;
                 if (codigoRegistro.length >= 3 && anioIngreso) {
@@ -125,7 +124,6 @@
                 }
             }, [formData.codigoRegistro, formData.anioIngreso]);
 
-            // VERIFICACIÓN EXISTENCIA (API)
             useEffect(() => {
                 if (formData.codigoRegistro.length === 9 && !isEditing) {
                     fetch(`${API_URL}?action=exists&code=${formData.codigoRegistro}`)
@@ -137,15 +135,16 @@
 
             const handleChange = (e) => {
                 const { name, value } = e.target;
-                if (name === 'codigoRegistro' || name === 'pin') {
+                if (name === 'codigoRegistro' || name === 'pin' || name === 'telefono') {
                     const val = value.replace(/\D/g, '');
-                    setFormData(prev => ({ ...prev, [name]: name === 'pin' ? val.slice(0,4) : val.slice(0,9) }));
+                    if (name === 'pin') setFormData(prev => ({ ...prev, [name]: val.slice(0,4) }));
+                    else if (name === 'codigoRegistro') setFormData(prev => ({ ...prev, [name]: val.slice(0,9) }));
+                    else setFormData(prev => ({ ...prev, [name]: val }));
                     return;
                 }
                 setFormData(prev => ({ ...prev, [name]: value }));
             };
 
-            // isUnlocked ahora siempre retorna true para liberar selección
             const isUnlocked = (subject) => {
                 return true; 
             };
@@ -201,6 +200,7 @@
                             setApprovedSubjects(new Set(aprobadasArr));
                             setFormData({
                                 nombre: result.nombre, codigoRegistro: String(result.codigoRegistro),
+                                telefono: result.telefono || '', email: result.email || '',
                                 semestre: result.semestre,
                                 anioIngreso: result.anioIngreso, asignaturasAprobadas: result.asignaturasAprobadas,
                                 ppa: result.ppa, pin: String(result.pin)
@@ -244,7 +244,7 @@
                 })
                 .then(response => {
                     setStatus('success'); setStatusMessage("Enviado correctamente.");
-                    setFormData({ nombre: '', codigoRegistro: '', semestre: '', anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: '' });
+                    setFormData({ nombre: '', codigoRegistro: '', telefono: '', email: '', semestre: '', anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: '' });
                     setApprovedSubjects(new Set());
                     setOriginalCode(null); 
                     setSearchCode(''); setSearchPin(''); setIsEditing(false); setLoading(false);
@@ -282,7 +282,7 @@
                                 <div className="bg-blue-100 p-3 rounded-full hidden sm:block">
                                     <Info className="text-[#00008B]" size={24} />
                                 </div>
-                                <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
+                                <div className="space-y-4 text-slate-700 text-sm leading-relaxed w-full">
                                     
                                     <div>
                                         <h2 className="text-lg font-bold text-[#00008B] mb-1 font-serif">Simulación de Transición - Plan 148-2</h2>
@@ -291,22 +291,35 @@
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                                            <h3 className="font-bold text-[#00008B] mb-1 flex items-center gap-2"><Target size={16}/> Objetivo</h3>
-                                            <p>El presente cuestionario tiene como objetivo realizar una simulación de la transición para evaluar cómo el nuevo Plan podría influir en su trayectoria formativa. Su participación es esencial para definir y validar futuras reglas de migración, homologación y compensación.</p>
+                                            <h3 className="font-bold text-[#00008B] mb-2 flex items-center gap-2"><Target size={16}/> Objetivo</h3>
+                                            <p className="text-justify">El presente cuestionario tiene como objetivo realizar una simulación de la transición para evaluar cómo el nuevo Plan podría influir en su trayectoria formativa. Su participación es esencial para definir y validar futuras reglas de migración, homologación y compensación.</p>
                                         </div>
                                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                                            <h3 className="font-bold text-[#00008B] mb-1 flex items-center gap-2"><ListChecks size={16}/> Consigna</h3>
-                                            <p>Le solicitamos responder de manera <strong>sincera y completa</strong>. Sus respuestas serán tratadas con estricta confidencialidad y utilizadas únicamente con fines de análisis académico e institucional.</p>
+                                            <h3 className="font-bold text-[#00008B] mb-2 flex items-center gap-2"><ListChecks size={16}/> Consigna</h3>
+                                            <p className="text-justify">Le solicitamos responder de manera <strong>sincera y completa</strong>. Sus respuestas serán tratadas con estricta confidencialidad y utilizadas únicamente con fines de análisis académico e institucional.</p>
                                         </div>
                                     </div>
 
                                     <div>
                                         <h3 className="font-bold text-slate-800 mb-2 border-b pb-1 flex items-center gap-2"><Layout size={16}/> Dimensiones del Registro</h3>
                                         <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-medium text-slate-600">
-                                            <li className="flex items-center gap-2"><span className="bg-blue-100 text-blue-800 py-1 px-2 rounded font-bold">1</span> Identificación y Acceso Seguro</li>
-                                            <li className="flex items-center gap-2"><span className="bg-blue-100 text-blue-800 py-1 px-2 rounded font-bold">2</span> Historial Académico (PPA)</li>
-                                            <li className="flex items-center gap-2"><span className="bg-blue-100 text-blue-800 py-1 px-2 rounded font-bold">3</span> Avance Curricular Detallado</li>
+                                            <li className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-100">
+                                                <span className="bg-blue-100 text-blue-800 w-6 h-6 flex items-center justify-center rounded-full font-bold text-[10px]">1</span> 
+                                                Identificación y Acceso Seguro
+                                            </li>
+                                            <li className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-100">
+                                                <span className="bg-blue-100 text-blue-800 w-6 h-6 flex items-center justify-center rounded-full font-bold text-[10px]">2</span> 
+                                                Historial Académico (PPA)
+                                            </li>
+                                            <li className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-100">
+                                                <span className="bg-blue-100 text-blue-800 w-6 h-6 flex items-center justify-center rounded-full font-bold text-[10px]">3</span> 
+                                                Avance Curricular Detallado
+                                            </li>
                                         </ul>
+                                    </div>
+                                    
+                                    <div className="text-center pt-2 text-slate-500 font-medium italic">
+                                        Muchas gracias por su colaboración.
                                     </div>
                                 </div>
                             </div>
@@ -326,6 +339,7 @@
                         <form onSubmit={handleSubmit} className="space-y-8">
                             {/* DATOS */}
                             <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {/* Datos Personales */}
                                 <div><label className="text-sm font-bold">Nombre</label><input required name="nombre" value={formData.nombre} onChange={handleChange} className="w-full p-2.5 border rounded-lg outline-none" /></div>
                                 <div>
                                     <label className="text-sm font-bold">Código</label>
@@ -333,17 +347,22 @@
                                     {duplicateError && <span className="text-red-600 text-xs">¡Ya existe!</span>}
                                 </div>
                                 <div>
-                                    <label className="text-sm font-bold">PIN (este PIN de 4 dígitos lo puedes usar en el apartado de editar registro por si te equivocas en algun dato al llenar el cuestionario)</label>
-                                    <input 
-                                        required 
-                                        name="pin" 
-                                        value={formData.pin} 
-                                        onChange={handleChange} 
-                                        disabled={isEditing}
-                                        className={`w-full p-2.5 border rounded-lg text-center tracking-widest ${isEditing ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`} 
-                                    />
+                                    <label className="text-sm font-bold">PIN (4 dígitos)</label>
+                                    <input required name="pin" value={formData.pin} onChange={handleChange} disabled={isEditing} className={`w-full p-2.5 border rounded-lg text-center tracking-widest ${isEditing ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`} />
                                     {isEditing && <span className="text-xs text-gray-400">No modificable en edición</span>}
                                 </div>
+
+                                {/* CONTACTO (NUEVOS CAMPOS) */}
+                                <div>
+                                    <label className="text-sm font-bold flex items-center gap-2"><Phone size={14}/> Teléfono</label>
+                                    <input required type="tel" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Ej. 77012345" className="w-full p-2.5 border rounded-lg outline-none" />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-bold flex items-center gap-2"><Mail size={14}/> Correo Electrónico</label>
+                                    <input required type="email" name="email" value={formData.email} onChange={handleChange} placeholder="estudiante@uagrm.edu.bo" className="w-full p-2.5 border rounded-lg outline-none" />
+                                </div>
+
+                                {/* ACADÉMICO */}
                                 <div>
                                     <label className="text-sm font-bold">Año Ingreso</label>
                                     <input required type="number" name="anioIngreso" value={formData.anioIngreso} onChange={handleChange} className={`w-full p-2.5 border rounded-lg ${validationError ? 'border-red-500' : ''}`} />
@@ -374,24 +393,20 @@
                                                 {sem.subs.map(sub => {
                                                     const isChecked = approvedSubjects.has(sub.c);
                                                     
-                                                    // Mensaje informativo (NO bloqueante)
-                                                    const isElective = sem.id === 14;
-                                                    let infoMsg = "";
-                                                    
-                                                    if (isElective && !subjectMapHasSem1(approvedSubjects)) {
-                                                        infoMsg = "Sugerencia: Aprobar materias de 1er semestre primero";
-                                                    } else if (sub.req.length > 0 && !isUnlocked(sub)) {
-                                                        const missing = sub.req.filter(r => !approvedSubjects.has(r)).map(r => subjectsMap[r]?.n || r).join(', ');
-                                                        if(missing) infoMsg = `Requisito sugerido: ${missing}`;
-                                                    }
+                                                    const isElectiveBlocked = sem.id === 14 && !isUnlocked(sub) && !subjectMapHasSem1(approvedSubjects);
+                                                    const tooltipMsg = isElectiveBlocked 
+                                                        ? "Requiere aprobar TODAS las materias del 1er semestre" 
+                                                        : !isUnlocked(sub) && sub.req.length > 0
+                                                            ? `Falta: ${sub.req.filter(r => !approvedSubjects.has(r)).map(r => subjectsMap[r]?.n || r).join(', ')}`
+                                                            : '';
 
                                                     return (
-                                                        <label key={sub.c} title={infoMsg} className={`flex items-start gap-3 p-2 rounded border cursor-pointer ${isChecked ? 'bg-blue-50 border-blue-200' : 'hover:bg-slate-50'}`}>
+                                                        <label key={sub.c} title={tooltipMsg} className={`flex items-start gap-3 p-2 rounded border cursor-pointer ${isChecked ? 'bg-blue-50 border-blue-200' : 'hover:bg-slate-50'}`}>
                                                             <input type="checkbox" className="mt-1" checked={isChecked} disabled={locked} onChange={() => toggleSubject(sub.c)} />
                                                             <div className="text-sm">
                                                                 <div className={`font-bold ${isChecked ? 'text-[#00008B]' : 'text-slate-700'}`}>{sub.n}</div>
                                                                 <div className="text-xs text-slate-400">{sub.c}</div>
-                                                                {infoMsg && <div className="text-[10px] text-gray-400 italic mt-1 line-clamp-1">{infoMsg}</div>}
+                                                                {tooltipMsg && <div className="text-[10px] text-gray-400 italic mt-1 line-clamp-1">{tooltipMsg}</div>}
                                                             </div>
                                                         </label>
                                                     )
@@ -424,4 +439,3 @@
     </script>
 </body>
 </html>
-
