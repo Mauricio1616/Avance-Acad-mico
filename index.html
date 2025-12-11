@@ -28,20 +28,17 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { User, Send, CheckCircle, AlertCircle, Calendar, Layers, Award, Search, Edit3, Lock, AlertTriangle, KeyRound, BookOpen } from 'lucide-react';
+        import { User, Send, CheckCircle, AlertCircle, Calendar, Layers, Award, Search, Edit3, Lock, AlertTriangle, KeyRound, BookOpen, Info } from 'lucide-react';
 
         // ==========================================
         //  CONFIGURACIÓN DEL SERVIDOR
         // ==========================================
         const API_URL = "https://script.google.com/macros/s/AKfycbz0Y8CeApb9DHz4gPIUE85YxVqXDghcvksfl-yZN-N-Z7BmhAranatWQ4C2aRLe3LVY/exec"; 
-        // Ejemplo: "https://script.google.com/macros/s/AKfyc.../exec"
         
         // ==========================================
         //  CONFIGURACIÓN VISUAL
         // ==========================================
-        // Ruta relativa a la carpeta donde está este archivo index.html
         const LOGO_URL = "img/psicologia.png"; 
-        // NOTA: Si la imagen es .jpg, cambia .png por .jpg arriba
 
         // --- DATOS DE LA MALLA CURRICULAR ---
         const curriculumData = [
@@ -59,20 +56,18 @@
             { sem: "Ambiental Comunitario", id: 12, type: "special", group: "ambiental", colorHeader: "bg-teal-700", colorText: "text-white", icon: "fa-users", subs: [ {c:"AMB-1",n:"Psicología Ambiental I", req: ["CSO-451"]}, {c:"AMB-2",n:"Psicología Comunitaria I", req: ["PSI-451"]}, {c:"AMB-3",n:"Psicología de las Org. I", req: ["PSI-451"]}, {c:"AMB-4",n:"Psicología Ambiental II", req: ["AMB-1"]}, {c:"AMB-5",n:"Psicología Comunitaria II", req: ["AMB-2"]}, {c:"AMB-6",n:"Psicología de las Org. II", req: ["AMB-3"]} ] },
             { sem: "Psicoanalítico", id: 13, type: "special", group: "psicoanalitico", colorHeader: "bg-rose-900", colorText: "text-white", icon: "fa-couch", subs: [ {c:"PSA-1",n:"Abordaje Clínico I", req: ["PSI-450"]}, {c:"PSA-2",n:"Abordaje Educativo I", req: ["PSI-452"]}, {c:"PSA-3",n:"Abordaje Socio Org I", req: ["CSO-451"]}, {c:"PSA-4",n:"Abordaje Clínico II", req: ["PSA-1"]}, {c:"PSA-5",n:"Abordaje Educativo II", req: ["PSA-2"]}, {c:"PSA-6",n:"Abordaje Socio Org II", req: ["PSA-3"]} ] },
             { sem: "Materias Electivas", id: 14, colorHeader: "bg-pink-100", colorText: "text-pink-900", icon: "fa-layer-group", 
-              // REGLA: Se habilitan desde el 2do Semestre. 
-              // Esto lo validamos en la función isUnlocked verificando que se haya aprobado al menos algo del 1er semestre.
               subs: [ 
                 {c:"ELEC-1",n:"Grupo Relacional I", req: []}, 
-                {c:"ELEC-2",n:"Grupo Relacional II", req: ["ELEC-1"]}, 
+                {c:"ELEC-2",n:"Grupo Relacional II", req: ["ELEC-1"]},
                 {c:"COMP-1",n:"Computación I", req: []}, 
-                {c:"COMP-2",n:"Computación II", req: ["COMP-1"]}, 
+                {c:"COMP-2",n:"Computación II", req: ["COMP-1"]},
                 {c:"ELEC-3",n:"Técnicas Recreacionales", req: []}, 
                 {c:"LENG-1",n:"Lengua Nativa I", req: []}, 
                 {c:"LENG-2",n:"Lengua Nativa II", req: ["LENG-1"]}, 
                 {c:"LENG-3",n:"Lengua Nativa III", req: ["LENG-2"]}, 
                 {c:"LENG-4",n:"Lengua Nativa IV", req: ["LENG-3"]}, 
                 {c:"ING-1",n:"Idioma Inglés I", req: []}, 
-                {c:"ING-2",n:"Idioma Inglés II", req: ["ING-1"]} 
+                {c:"ING-2",n:"Idioma Inglés II", req: ["ING-1"]}
             ] },
             { sem: "Talleres", id: 15, colorHeader: "bg-gray-800", colorText: "text-white", icon: "fa-screwdriver-wrench", subs: [ {c:"TALL-1",n:"Movimientos Indígenas", req: ["ANT-150"]}, {c:"TALL-2",n:"Territorios en Pueblos Ind.", req: ["ANT-150"]}, {c:"TALL-3",n:"Relac. Interétnicas", req: ["ANT-150"]}, {c:"TALL-4",n:"Identidad y Culturas", req: ["CSO-300"]}, {c:"TALL-5",n:"Soc. Infancia y Juv.", req: ["PSI-254"]}, {c:"TALL-6",n:"Soc. Org. y Trabajo", req: ["CSO-250"]}, {c:"TALL-7",n:"Sociología Migraciones", req: ["CSO-150"]}, {c:"TALL-8",n:"Delito y Sociedad", req: ["CSO-300"]}, {c:"TALL-9",n:"Clínica Psicoanalítica", req: ["PSI-353"]}, {c:"TALL-10",n:"Psicoanálisis Adolesc.", req: ["PSI-353"]}, {c:"TALL-11",n:"Psicosomática", req: ["BIO-250"]}, {c:"TALL-12",n:"Psicoanálisis de Niños", req: ["PSI-353"]}, {c:"TALL-13",n:"Salud Mental Comunitaria", req: ["PSI-354"]}, {c:"TALL-14",n:"Psic. Comunicación", req: ["PSI-400"]}, {c:"TALL-15",n:"Técnicas Conciliación", req: ["CSO-401"]}, {c:"TALL-16",n:"Terapia Rogeriana", req: ["PSI-400"]}, {c:"TALL-17",n:"Psicodrama", req: ["PSI-400"]}, {c:"TALL-18",n:"Psicología Positiva", req: ["PSI-400"]}, {c:"TALL-19",n:"Dificultades Aprendizaje", req: ["PSI-202"]}, {c:"TALL-20",n:"Psicofarmacología", req: ["PSI-400"]}, {c:"TALL-21",n:"Psicohigiene", req: ["PSI-400"]}, {c:"TALL-22",n:"Orientación Vocacional", req: ["PSI-402"]}, {c:"TALL-23",n:"Psic. Sexualidad", req: ["PSI-313"]}, {c:"TALL-24",n:"Psic. Organizacional", req: ["CSO-250"]}, {c:"TALL-25",n:"Educación Especial", req: ["PSI-402"]}, {c:"TALL-26",n:"Psicología Deporte", req: ["BIO-100"]}, {c:"TALL-27",n:"Sociología de la Salud", req: ["CSO-150"]}, {c:"TALL-28",n:"Género y Desarrollo", req: ["CSO-200"]}, {c:"TALL-29",n:"Teoría Conflicto Social", req: ["CSO-200"]}, {c:"TALL-30",n:"Ecología Social", req: ["CSO-201"]} ] }
         ];
@@ -91,17 +86,13 @@
             const [validationError, setValidationError] = useState('');
             const [duplicateError, setDuplicateError] = useState(false);
             const [formData, setFormData] = useState({
-                nombre: '', codigoRegistro: '', semestre: '', esEgresado: 'No', 
+                nombre: '', codigoRegistro: '', semestre: '',
                 anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: ''
             });
             const [approvedSubjects, setApprovedSubjects] = useState(new Set());
             const [originalCode, setOriginalCode] = useState(null);
 
             useEffect(() => {
-                if (formData.esEgresado === 'Si') {
-                    setFormData(prev => ({ ...prev, semestre: 'Egresado', asignaturasAprobadas: 'Plan Completo (Egresado)' }));
-                    return;
-                }
                 const approvedArray = Array.from(approvedSubjects);
                 let currentSem = '1er Semestre';
                 if (approvedArray.length > 0) {
@@ -113,13 +104,12 @@
                     if(maxSem > 0) currentSem = `${maxSem}º Semestre`;
                 }
                 setFormData(prev => ({ ...prev, semestre: currentSem, asignaturasAprobadas: approvedArray.join(', ') }));
-            }, [approvedSubjects, formData.esEgresado]);
+            }, [approvedSubjects]);
 
-            // VALIDACIÓN AÑO vs CÓDIGO (LÓGICA ACTUALIZADA)
+            // VALIDACIÓN AÑO vs CÓDIGO
             useEffect(() => {
                 const { codigoRegistro, anioIngreso } = formData;
                 if (codigoRegistro.length >= 3 && anioIngreso) {
-                    // Si el código empieza con '2', aplicamos la regla estricta de fecha
                     if (codigoRegistro.startsWith('2')) {
                         const yearDigits = codigoRegistro.substring(1, 3);
                         if (!String(anioIngreso).endsWith(yearDigits)) {
@@ -128,7 +118,6 @@
                             setValidationError('');
                         }
                     } else {
-                        // Si empieza con otro número, es registro antiguo y no validamos la consistencia con el código
                         setValidationError('');
                     }
                 } else {
@@ -157,14 +146,11 @@
             };
 
             const isUnlocked = (subject) => {
-                // REGLA GLOBAL ELECTIVAS: Solo se activan desde 2do Semestre.
-                // Verificamos si la materia pertenece al grupo de Electivas (id 14)
                 const isElective = curriculumData.find(sem => sem.id === 14).subs.some(s => s.c === subject.c);
                 if (isElective) {
-                    // Verificar si aprobó TODAS las materias del Semestre 1 (id 1)
                     const sem1Codes = curriculumData[0].subs.map(s => s.c);
                     const hasPassedAllSem1 = sem1Codes.every(code => approvedSubjects.has(code));
-                    if (!hasPassedAllSem1) return false; // Bloqueado si no pasó TODO el 1er semestre
+                    if (!hasPassedAllSem1) return false; 
                 }
 
                 if (subject.req.length === 0) return true;
@@ -187,15 +173,9 @@
                 const newSet = new Set(approvedSubjects);
                 if (newSet.has(code)) {
                     newSet.delete(code);
-                    const removeDependent = (parentCode) => {
-                        curriculumData.forEach(sem => sem.subs.forEach(sub => {
-                            if (sub.req.includes(parentCode) && newSet.has(sub.c)) {
-                                newSet.delete(sub.c); removeDependent(sub.c);
-                            }
-                        }));
-                    };
-                    removeDependent(code);
-                } else newSet.add(code);
+                } else {
+                    newSet.add(code);
+                }
                 setApprovedSubjects(newSet);
             };
 
@@ -206,24 +186,13 @@
                 const allApproved = allInSem.every(c => approvedSubjects.has(c));
                 const newSet = new Set(approvedSubjects);
                 if (allApproved) {
-                    allInSem.forEach(c => {
-                        newSet.delete(c);
-                        const removeDependent = (parentCode) => {
-                            curriculumData.forEach(s => s.subs.forEach(sub => {
-                                if (sub.req.includes(parentCode) && newSet.has(sub.c)) {
-                                    newSet.delete(sub.c); removeDependent(sub.c);
-                                }
-                            }));
-                        };
-                        removeDependent(c);
-                    });
+                    allInSem.forEach(c => newSet.delete(c));
                 } else {
-                    sem.subs.forEach(sub => { if (isUnlocked(sub)) newSet.add(sub.c); });
+                    sem.subs.forEach(sub => newSet.add(sub.c));
                 }
                 setApprovedSubjects(newSet);
             };
 
-            // BUSCAR (API)
             const handleSearch = (e) => {
                 e.preventDefault();
                 if(!searchCode || !searchPin) { setStatusMessage('Faltan datos.'); setStatus('error'); return; }
@@ -239,7 +208,7 @@
                             setApprovedSubjects(new Set(aprobadasArr));
                             setFormData({
                                 nombre: result.nombre, codigoRegistro: String(result.codigoRegistro),
-                                semestre: result.semestre, esEgresado: isGrad ? 'Si' : 'No',
+                                semestre: result.semestre,
                                 anioIngreso: result.anioIngreso, asignaturasAprobadas: result.asignaturasAprobadas,
                                 ppa: result.ppa, pin: String(result.pin)
                             });
@@ -252,11 +221,9 @@
                     .catch(() => { setSearching(false); setStatusMessage('Error de conexión.'); setStatus('error'); });
             };
 
-            // GUARDAR (API)
             const handleSubmit = (e) => {
                 e.preventDefault();
                 
-                // VALIDACIÓN EXTRA: AÑO DE INGRESO DEBE SER DE 4 DÍGITOS
                 if (String(formData.anioIngreso).length !== 4) {
                     setStatusMessage('El Año de Ingreso debe tener 4 dígitos (Ej. 2023).');
                     setStatus('error');
@@ -284,7 +251,7 @@
                 })
                 .then(response => {
                     setStatus('success'); setStatusMessage("Enviado correctamente.");
-                    setFormData({ nombre: '', codigoRegistro: '', semestre: '', esEgresado: 'No', anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: '' });
+                    setFormData({ nombre: '', codigoRegistro: '', semestre: '', anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: '' });
                     setApprovedSubjects(new Set());
                     setOriginalCode(null); 
                     setSearchCode(''); setSearchPin(''); setIsEditing(false); setLoading(false);
@@ -301,7 +268,6 @@
                         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="p-2 bg-white rounded-full shadow-md text-[#8B0000]">
-                                    {/* LOGO: Aquí puedes poner tu imagen */}
                                     {LOGO_URL !== "PEGAR_URL_LOGO_AQUI" 
                                         ? <img src={LOGO_URL} alt="Logo" className="w-20 h-20 object-contain" />
                                         : <i className="fa-solid fa-university text-2xl"></i>
@@ -316,6 +282,23 @@
                     </div>
 
                     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+                        
+                        {/* CONSIGNA INSTITUCIONAL */}
+                        <div className="bg-blue-50 border-l-4 border-[#00008B] p-6 rounded-r-lg shadow-sm">
+                            <div className="flex items-start">
+                                <Info className="text-[#00008B] mt-1 mr-4 flex-shrink-0" size={24} />
+                                <div className="text-blue-900 text-sm space-y-2 leading-relaxed text-justify">
+                                    <p className="font-bold text-base mb-1">Estimado(a) estudiante:</p>
+                                    <p>La Carrera de Psicología se encuentra en la fase de ensayo logístico del proceso de implementación del nuevo Plan de Estudios 148-2.</p>
+                                    <p>El presente cuestionario tiene como objetivo realizar una simulación de la transición. Necesitamos conocer su situación académica actual para evaluar cómo el nuevo Plan podría influir en su trayectoria formativa.</p>
+                                    <p>Su participación es esencial para que la Comisión de Rediseño pueda definir y validar las futuras reglas de migración, homologación y compensación que la Carrera aplicará para resguardar la continuidad y los derechos académicos de cada estudiante una vez que la implementación sea oficial.</p>
+                                    <p>Le solicitamos responder de manera sincera y completa.</p>
+                                    <p className="italic font-medium">Sus respuestas serán tratadas con estricta confidencialidad y utilizadas únicamente con fines de análisis académico e institucional.</p>
+                                    <p className="font-bold">Muchas gracias por su colaboración.</p>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* BÚSQUEDA */}
                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                             <h3 className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><Edit3 size={14}/> Editar Registro</h3>
@@ -354,13 +337,6 @@
                                     {validationError && <span className="text-red-600 text-xs">{validationError}</span>}
                                 </div>
                                 <div>
-                                    <label className="text-sm font-bold">¿Es Egresado?</label>
-                                    <div className="flex gap-4 mt-2">
-                                        <label><input type="radio" name="esEgresado" value="Si" checked={formData.esEgresado === 'Si'} onChange={handleChange} /> Sí</label>
-                                        <label><input type="radio" name="esEgresado" value="No" checked={formData.esEgresado === 'No'} onChange={handleChange} /> No</label>
-                                    </div>
-                                </div>
-                                <div>
                                     <label className="text-sm font-bold">PPA</label>
                                     <div className="flex flex-wrap gap-2 text-xs mt-1">
                                         {['< 51', '51-64', '65-75', '76-85', '86-100'].map(r => (
@@ -372,54 +348,43 @@
                                 </div>
                             </div>
 
-                            {/* MALLA */}
-                            {formData.esEgresado === 'No' ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {curriculumData.map((sem, idx) => {
-                                        const locked = isSpecialtyBlocked(sem.group);
-                                        return (
-                                            <div key={idx} className={`bg-white rounded-xl shadow-sm border overflow-hidden ${locked ? 'specialty-locked' : ''}`}>
-                                                <div className={`${sem.colorHeader} px-4 py-3 flex justify-between items-center`}>
-                                                    <h4 className={`font-bold ${sem.colorText} flex items-center gap-2`}>{sem.icon && <i className={`fa-solid ${sem.icon}`}></i>}{sem.sem}</h4>
-                                                    {!locked && <button type="button" onClick={() => toggleSemester(idx)} className="text-xs px-2 py-1 rounded border border-current font-bold opacity-70 hover:opacity-100">Todo</button>}
-                                                </div>
-                                                <div className="p-4 space-y-2">
-                                                    {sem.subs.map(sub => {
-                                                        const unlocked = isUnlocked(sub);
-                                                        const isChecked = approvedSubjects.has(sub.c);
-                                                        
-                                                        // Mensaje de tooltip
-                                                        // Si es electiva y está bloqueada porque no tiene materias de 1ero
-                                                        const isElectiveBlocked = sem.id === 14 && !unlocked && !subjectMapHasSem1(approvedSubjects);
-                                                        const tooltipMsg = isElectiveBlocked 
-                                                            ? "Requiere aprobar TODAS las materias del 1er semestre" 
-                                                            : !unlocked && sub.req.length > 0
-                                                                ? `Falta: ${sub.req.filter(r => !approvedSubjects.has(r)).map(r => subjectsMap[r]?.n || r).join(', ')}`
-                                                                : '';
-
-                                                        return (
-                                                            <label key={sub.c} title={tooltipMsg} className={`flex items-start gap-3 p-2 rounded border cursor-pointer ${!unlocked ? 'subject-disabled' : isChecked ? 'bg-blue-50 border-blue-200' : 'hover:bg-slate-50'}`}>
-                                                                <input type="checkbox" className="mt-1" checked={isChecked} disabled={!unlocked || locked} onChange={() => toggleSubject(sub.c)} />
-                                                                <div className="text-sm">
-                                                                    <div className={`font-bold ${isChecked ? 'text-[#00008B]' : 'text-slate-700'}`}>{sub.n}</div>
-                                                                    <div className="text-xs text-slate-400">{sub.c}</div>
-                                                                    {tooltipMsg && <div className="text-[10px] text-red-500 italic mt-1 line-clamp-1">{tooltipMsg}</div>}
-                                                                </div>
-                                                            </label>
-                                                        )
-                                                    })}
-                                                </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                {curriculumData.map((sem, idx) => {
+                                    const locked = isSpecialtyBlocked(sem.group);
+                                    return (
+                                        <div key={idx} className={`bg-white rounded-xl shadow-sm border overflow-hidden ${locked ? 'specialty-locked' : ''}`}>
+                                            <div className={`${sem.colorHeader} px-4 py-3 flex justify-between items-center`}>
+                                                <h4 className={`font-bold ${sem.colorText} flex items-center gap-2`}>{sem.icon && <i className={`fa-solid ${sem.icon}`}></i>}{sem.sem}</h4>
+                                                {!locked && <button type="button" onClick={() => toggleSemester(idx)} className="text-xs px-2 py-1 rounded border border-current font-bold opacity-70 hover:opacity-100">Todo</button>}
                                             </div>
-                                        )
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-8 text-center text-emerald-800 font-bold">
-                                    ¡Felicidades! Al ser Egresado, no necesitas llenar la malla. Envía tu registro.
-                                </div>
-                            )}
+                                            <div className="p-4 space-y-2">
+                                                {sem.subs.map(sub => {
+                                                    const isChecked = approvedSubjects.has(sub.c);
+                                                    
+                                                    const isElectiveBlocked = sem.id === 14 && !isUnlocked(sub) && !subjectMapHasSem1(approvedSubjects);
+                                                    const tooltipMsg = isElectiveBlocked 
+                                                        ? "Requiere aprobar TODAS las materias del 1er semestre" 
+                                                        : !isUnlocked(sub) && sub.req.length > 0
+                                                            ? `Falta: ${sub.req.filter(r => !approvedSubjects.has(r)).map(r => subjectsMap[r]?.n || r).join(', ')}`
+                                                            : '';
 
-                            {/* BOTÓN */}
+                                                    return (
+                                                        <label key={sub.c} title={tooltipMsg} className={`flex items-start gap-3 p-2 rounded border cursor-pointer ${isChecked ? 'bg-blue-50 border-blue-200' : 'hover:bg-slate-50'}`}>
+                                                            <input type="checkbox" className="mt-1" checked={isChecked} disabled={locked} onChange={() => toggleSubject(sub.c)} />
+                                                            <div className="text-sm">
+                                                                <div className={`font-bold ${isChecked ? 'text-[#00008B]' : 'text-slate-700'}`}>{sub.n}</div>
+                                                                <div className="text-xs text-slate-400">{sub.c}</div>
+                                                                {tooltipMsg && <div className="text-[10px] text-gray-400 italic mt-1 line-clamp-1">{tooltipMsg}</div>}
+                                                            </div>
+                                                        </label>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+
                             <div className="fixed bottom-6 right-6 z-50">
                                 <button type="submit" disabled={loading || validationError || duplicateError || formData.pin.length !== 4} className={`px-8 py-4 rounded-full font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 ${loading ? 'bg-slate-500' : isEditing ? 'bg-orange-600' : 'bg-[#00008B]'}`}>
                                     {loading ? 'Enviando...' : isEditing ? 'Actualizar Registro' : 'Enviar Registro'}
@@ -431,7 +396,6 @@
             );
         }
 
-        // Helper para verificar semestre 1 (usado en tooltip)
         function subjectMapHasSem1(approvedSet) {
              const sem1Codes = ["FIL-101", "EST-121", "CSO-101", "ANT-100", "PSI-101", "BIO-100", "DEP-112"];
              return sem1Codes.every(code => approvedSet.has(code));
@@ -441,6 +405,4 @@
         root.render(<App />);
     </script>
 </body>
-
 </html>
-
