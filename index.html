@@ -2,883 +2,352 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro Académico - Psicología</title>
+    <title>Plataforma Académica</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "lucide-react": "https://esm.sh/lucide-react@0.263.1"
-      }
-    }
+    { "imports": { "react": "https://esm.sh/react@18.2.0", "react-dom/client": "https://esm.sh/react-dom@18.2.0/client", "lucide-react": "https://esm.sh/lucide-react@0.263.1" } }
     </script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { padding: 0; margin: 0; background-color: #f8fafc; }
-        .subject-disabled { opacity: 0.5; cursor: not-allowed; background-color: #f3f4f6; }
-        .specialty-locked { filter: grayscale(100%); opacity: 0.4; pointer-events: none; border: 2px dashed #9ca3af; }
-        .fade-in { animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useMemo, useRef } from 'react';
+        import React, { useState, useEffect } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { User, Send, CheckCircle, AlertCircle, Calendar, Layers, Award, Search, Edit3, Lock, AlertTriangle, KeyRound, BookOpen, Info, Target, ListChecks, Layout, Phone, Mail, ArrowRight, ArrowLeft, FileText, UserCheck, GraduationCap, CheckSquare, MessageSquare, ClipboardList, HelpCircle, BarChart2, BookX, Clock, ThumbsUp, Lightbulb, Shield } from 'lucide-react';
+        import { User, Lock, Layout, Plus, Trash2, Save, Edit, Settings, BarChart2, Image as ImageIcon, ArrowLeft, Send, LogOut, RefreshCw, AlertTriangle, CheckCircle, Database } from 'lucide-react';
 
-        const API_URL = "https://script.google.com/macros/s/AKfycbz0Y8CeApb9DHz4gPIUE85YxVqXDghcvksfl-yZN-N-Z7BmhAranatWQ4C2aRLe3LVY/exec"; 
+        // ⚠️ PEGA AQUÍ TU NUEVA URL DE LA VERSIÓN 5.0 ⚠️
+        const API_URL = "https://script.google.com/macros/s/AKfycbyfNAabSsdYrncvAp8J8FoFDQgAnlVFm2Vk0yinu1jT3dzenr1nPvUBPR6_BnbsLIaa/exec";
         const LOGO_URL = "img/psicologia.png"; 
 
-        // --- DATOS DE LA MALLA CURRICULAR ---
-        const curriculumData = [
-            { sem: "1er Semestre", id: 1, colorHeader: "bg-blue-100", colorText: "text-blue-900", subs: [ {c:"FIL-101",n:"Filosofía", req: []}, {c:"EST-121",n:"Estadística I", req: []}, {c:"CSO-101",n:"Sociología I", req: []}, {c:"ANT-100",n:"Antropología Cultural", req: []}, {c:"PSI-101",n:"Psicología I", req: []}, {c:"BIO-100",n:"Biopsicología", req: []}, {c:"DEP-112",n:"Estrategias de Aprendizaje", req: []} ] },
-            { sem: "2do Semestre", id: 2, colorHeader: "bg-emerald-100", colorText: "text-emerald-900", subs: [ {c:"FIL-150",n:"Epistemología", req: ["FIL-101"]}, {c:"EST-152",n:"Estadística II", req: ["EST-121"]}, {c:"CSO-150",n:"Sociología II", req: ["CSO-101"]}, {c:"ANT-150",n:"Antrop. Cult. Boliviana", req: ["ANT-100"]}, {c:"PSI-150",n:"Psicología II", req: ["PSI-101"]}, {c:"BIO-150",n:"Psicofisiología", req: ["BIO-100"]} ] },
-            { sem: "3er Semestre", id: 3, colorHeader: "bg-orange-100", colorText: "text-orange-900", subs: [ {c:"INV-200",n:"Investigación I", req: ["EST-152", "FIL-150"]}, {c:"CSO-200",n:"Psicología Social", req: ["CSO-150"]}, {c:"CSO-201",n:"Psicología Etnoecológica", req: ["ANT-150"]}, {c:"PSI-200",n:"Desarrollo Humano I", req: ["PSI-150"]}, {c:"PSI-203",n:"Teorías y Sistemas I", req: ["PSI-150"]}, {c:"BIO-200",n:"Neuropsicología I", req: ["BIO-150"]}, {c:"PSI-202",n:"Aprendizaje", req: ["PSI-150", "BIO-150"]} ] },
-            { sem: "4to Semestre", id: 4, colorHeader: "bg-purple-100", colorText: "text-purple-900", subs: [ {c:"INV-250",n:"Investigación II", req: ["INV-200"]}, {c:"CSO-250",n:"Psicología Grupal y Org.", req: ["CSO-200"]}, {c:"PSI-254",n:"Desarrollo Humano II", req: ["PSI-200"]}, {c:"PSI-256",n:"Teorías y Sistemas II", req: ["PSI-202", "PSI-203"]}, {c:"BIO-250",n:"Neuropsicología II", req: ["BIO-200"]}, {c:"PSI-255",n:"Etología", req: ["PSI-202"]} ] },
-            { sem: "5to Semestre", id: 5, colorHeader: "bg-red-100", colorText: "text-red-900", subs: [ {c:"INV-300",n:"Investigación III", req: ["INV-250"]}, {c:"CSO-300",n:"Comportamiento y Sociedad", req: ["CSO-250"]}, {c:"PSI-310",n:"Psicología de la Personalidad I", req: ["PSI-254"]}, {c:"PSI-311",n:"Evaluación Psicológica I", req: ["PSI-254"]}, {c:"PSI-313",n:"Psicopatología I", req: ["PSI-254", "BIO-250"]}, {c:"PSI-312",n:"Psicología Cognitiva I", req: ["PSI-256"]} ] },
-            { sem: "6to Semestre", id: 6, colorHeader: "bg-cyan-100", colorText: "text-cyan-900", subs: [ {c:"INV-350",n:"Investigación IV", req: ["INV-300"]}, {c:"CSO-350",n:"Diagnóstico de Necesidades", req: ["CSO-300"]}, {c:"PSI-350",n:"Psicología de la Personalidad II", req: ["PSI-310"]}, {c:"PSI-351",n:"Evaluación Psicológica II", req: ["PSI-311"]}, {c:"PSI-354",n:"Psicopatología II", req: ["PSI-313"]}, {c:"PSI-353",n:"Psicoanálisis", req: ["PSI-256", "PSI-310"]}, {c:"PSI-352",n:"Psicología Cognitiva II", req: ["PSI-312"]} ] },
-            { sem: "7mo Semestre", id: 7, colorHeader: "bg-lime-100", colorText: "text-lime-900", subs: [ {c:"INV-400",n:"Investigación V", req: ["INV-350"]}, {c:"CSO-400",n:"Proyectos I", req: ["CSO-350"]}, {c:"CSO-401",n:"Tec. de Int. Socio - Org I", req: ["CSO-201", "CSO-350"]}, {c:"PSI-401",n:"Técnicas Proyectivas", req: ["PSI-351", "PSI-353"]}, {c:"PSI-400",n:"Tec. de Int. Clínica I", req: ["PSI-350", "PSI-354"]}, {c:"PSI-402",n:"Tec. de Int. Educativa I", req: ["PSI-352"]} ] },
-            { sem: "8vo Semestre", id: 8, colorHeader: "bg-amber-100", colorText: "text-amber-900", subs: [ {c:"INV-450",n:"Investigación VI", req: ["INV-400"]}, {c:"CSO-450",n:"Proyectos II", req: ["CSO-400"]}, {c:"CSO-451",n:"Tec. de Int. Socio - Org II", req: ["CSO-401"]}, {c:"PSI-451",n:"Psicodiagnóstico", req: ["PSI-401"]}, {c:"PSI-450",n:"Tec. de Int. Clínica II", req: ["PSI-400"]}, {c:"PSI-452",n:"Tec. de Int. Educativa II", req: ["PSI-402"]} ] },
-            { sem: "Ciclo Ético (9/10)", id: 9, colorHeader: "bg-slate-200", colorText: "text-slate-900", subs: [ {c:"DEP-500",n:"9no: Ética Profesional I", req: ["PSI-451"]}, {c:"DEP-501",n:"10mo: Ética Profesional II", req: ["DEP-500"]} ] },
-            { sem: "Abordaje Humanista", id: 10, type: "special", group: "humanista", colorHeader: "bg-red-800", colorText: "text-white", icon: "fa-hand-holding-heart", subs: [ {c:"HUM-1",n:"Abordaje Clínico I", req: ["PSI-450"]}, {c:"HUM-2",n:"Abordaje Educativo I", req: ["PSI-452"]}, {c:"HUM-3",n:"Abordaje Socio Org I", req: ["CSO-451"]}, {c:"HUM-4",n:"Abordaje Clínico II", req: ["HUM-1"]}, {c:"HUM-5",n:"Abordaje Educativo II", req: ["HUM-2"]}, {c:"HUM-6",n:"Abordaje Socio Org II", req: ["HUM-3"]} ] },
-            { sem: "Cognitivo Conductual", id: 11, type: "special", group: "cognitivo", colorHeader: "bg-blue-800", colorText: "text-white", icon: "fa-brain", subs: [ {c:"COG-1",n:"Abordaje Clínico I", req: ["PSI-450"]}, {c:"COG-2",n:"Abordaje Educativo I", req: ["PSI-452"]}, {c:"COG-3",n:"Abordaje Socio Org I", req: ["CSO-451"]}, {c:"COG-4",n:"Abordaje Clínico II", req: ["COG-1"]}, {c:"COG-5",n:"Abordaje Educativo II", req: ["COG-2"]}, {c:"COG-6",n:"Abordaje Socio Org II", req: ["COG-3"]} ] },
-            { sem: "Ambiental Comunitario", id: 12, type: "special", group: "ambiental", colorHeader: "bg-teal-700", colorText: "text-white", icon: "fa-users", subs: [ {c:"AMB-1",n:"Psicología Ambiental I", req: ["CSO-451"]}, {c:"AMB-2",n:"Psicología Comunitaria I", req: ["PSI-451"]}, {c:"AMB-3",n:"Psicología de las Org. I", req: ["PSI-451"]}, {c:"AMB-4",n:"Psicología Ambiental II", req: ["AMB-1"]}, {c:"AMB-5",n:"Psicología Comunitaria II", req: ["AMB-2"]}, {c:"AMB-6",n:"Psicología de las Org. II", req: ["AMB-3"]} ] },
-            { sem: "Psicoanalítico", id: 13, type: "special", group: "psicoanalitico", colorHeader: "bg-rose-900", colorText: "text-white", icon: "fa-couch", subs: [ {c:"PSA-1",n:"Abordaje Clínico I", req: ["PSI-450"]}, {c:"PSA-2",n:"Abordaje Educativo I", req: ["PSI-452"]}, {c:"PSA-3",n:"Abordaje Socio Org I", req: ["CSO-451"]}, {c:"PSA-4",n:"Abordaje Clínico II", req: ["PSA-1"]}, {c:"PSA-5",n:"Abordaje Educativo II", req: ["PSA-2"]}, {c:"PSA-6",n:"Abordaje Socio Org II", req: ["PSA-3"]} ] },
-            { sem: "Materias Electivas", id: 14, colorHeader: "bg-pink-100", colorText: "text-pink-900", icon: "fa-layer-group", 
-              subs: [ 
-                {c:"ELEC-1",n:"Grupo Relacional I", req: []}, 
-                {c:"ELEC-2",n:"Grupo Relacional II", req: ["ELEC-1"]},
-                {c:"COMP-1",n:"Computación I", req: []}, 
-                {c:"COMP-2",n:"Computación II", req: ["COMP-1"]},
-                {c:"ELEC-3",n:"Técnicas Recreacionales", req: []}, 
-                {c:"LENG-1",n:"Lengua Nativa I", req: []}, 
-                {c:"LENG-2",n:"Lengua Nativa II", req: ["LENG-1"]}, 
-                {c:"LENG-3",n:"Lengua Nativa III", req: ["LENG-2"]}, 
-                {c:"LENG-4",n:"Lengua Nativa IV", req: ["LENG-3"]}, 
-                {c:"ING-1",n:"Idioma Inglés I", req: []}, 
-                {c:"ING-2",n:"Idioma Inglés II", req: ["ING-1"]}
-            ] },
-            { sem: "Talleres", id: 15, colorHeader: "bg-gray-800", colorText: "text-white", icon: "fa-screwdriver-wrench", subs: [ {c:"TALL-1",n:"Movimientos Indígenas", req: ["ANT-150"]}, {c:"TALL-2",n:"Territorios en Pueblos Ind.", req: ["ANT-150"]}, {c:"TALL-3",n:"Relac. Interétnicas", req: ["ANT-150"]}, {c:"TALL-4",n:"Identidad y Culturas", req: ["CSO-300"]}, {c:"TALL-5",n:"Soc. Infancia y Juv.", req: ["PSI-254"]}, {c:"TALL-6",n:"Soc. Org. y Trabajo", req: ["CSO-250"]}, {c:"TALL-7",n:"Sociología Migraciones", req: ["CSO-150"]}, {c:"TALL-8",n:"Delito y Sociedad", req: ["CSO-300"]}, {c:"TALL-9",n:"Clínica Psicoanalítica", req: ["PSI-353"]}, {c:"TALL-10",n:"Psicoanálisis Adolesc.", req: ["PSI-353"]}, {c:"TALL-11",n:"Psicosomática", req: ["BIO-250"]}, {c:"TALL-12",n:"Psicoanálisis de Niños", req: ["PSI-353"]}, {c:"TALL-13",n:"Salud Mental Comunitaria", req: ["PSI-354"]}, {c:"TALL-14",n:"Psic. Comunicación", req: ["PSI-400"]}, {c:"TALL-15",n:"Técnicas Conciliación", req: ["CSO-401"]}, {c:"TALL-16",n:"Terapia Rogeriana", req: ["PSI-400"]}, {c:"TALL-17",n:"Psicodrama", req: ["PSI-400"]}, {c:"TALL-18",n:"Psicología Positiva", req: ["PSI-400"]}, {c:"TALL-19",n:"Dificultades Aprendizaje", req: ["PSI-202"]}, {c:"TALL-20",n:"Psicofarmacología", req: ["PSI-400"]}, {c:"TALL-21",n:"Psicohigiene", req: ["PSI-400"]}, {c:"TALL-22",n:"Orientación Vocacional", req: ["PSI-402"]}, {c:"TALL-23",n:"Psic. Sexualidad", req: ["PSI-313"]}, {c:"TALL-24",n:"Psic. Organizacional", req: ["CSO-250"]}, {c:"TALL-25",n:"Educación Especial", req: ["PSI-402"]}, {c:"TALL-26",n:"Psicología Deporte", req: ["BIO-100"]}, {c:"TALL-27",n:"Sociología de la Salud", req: ["CSO-150"]}, {c:"TALL-28",n:"Género y Desarrollo", req: ["CSO-200"]}, {c:"TALL-29",n:"Teoría Conflicto Social", req: ["CSO-200"]}, {c:"TALL-30",n:"Ecología Social", req: ["CSO-201"]} ] }
-        ];
+        // --- API HELPERS ---
+        const api = async (action, params = {}, method = 'GET') => {
+            const url = `${API_URL}?action=${action}${method === 'GET' ? '&' + new URLSearchParams(params) : ''}`;
+            const opts = method === 'POST' ? { method: 'POST', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(params) } : {};
+            
+            try {
+                const res = await fetch(url, opts);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                return data;
+            } catch (e) { throw new Error(e.message || "Error conexión"); }
+        };
 
-        // Crear una lista plana de todas las materias para los selectores
-        const allSubjectsList = curriculumData.flatMap(sem => sem.subs.map(s => ({ ...s, semestre: sem.sem })));
-        
-        // Helper function defined BEFORE usage
-        function subjectMapHasSem1(approvedSet) {
-             const sem1Codes = ["FIL-101", "EST-121", "CSO-101", "ANT-100", "PSI-101", "BIO-100", "DEP-112"];
-             return sem1Codes.every(code => approvedSet.has(code));
-        }
+        // --- COMPONENTES ---
 
-        // Componente MultiSubjectSelect
-        const MultiSubjectSelect = ({ label, options, selected, onChange, placeholder = "Seleccionar materias..." }) => {
-            const [isOpen, setIsOpen] = useState(false);
-            const [searchTerm, setSearchTerm] = useState("");
+        const StatusFooter = () => {
+            const [status, setStatus] = useState('Comprobando...');
+            const [color, setColor] = useState('text-gray-500');
 
-            const filteredOptions = options.filter(opt => 
-                opt.n.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                opt.c.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-
-            const handleToggle = (code) => {
-                if (selected.includes(code)) {
-                    onChange(selected.filter(c => c !== code));
-                } else {
-                    onChange([...selected, code]);
-                }
-            };
+            useEffect(() => {
+                api('status').then(d => {
+                    if(d.version === 'v5.0') {
+                        setStatus('Conectado: v5.0 (Listo)');
+                        setColor('text-green-600');
+                    } else {
+                        setStatus(`Versión Incorrecta: ${d.version || 'Desconocida'} (Actualiza URL)`);
+                        setColor('text-red-600');
+                    }
+                }).catch(e => {
+                    setStatus('Error de conexión: ' + e.message);
+                    setColor('text-red-600');
+                });
+            }, []);
 
             return (
-                <div className="relative mb-4">
-                    <label className="block text-sm font-bold text-slate-700 mb-1">{label}</label>
-                    <div 
-                        className="w-full border border-slate-300 rounded-lg p-3 cursor-pointer bg-white min-h-[46px]"
-                        onClick={() => setIsOpen(!isOpen)}
-                    >
-                        {selected.length === 0 ? (
-                            <span className="text-gray-400">{placeholder}</span>
-                        ) : (
-                            <div className="flex flex-wrap gap-2">
-                                {selected.map(code => {
-                                    const subj = options.find(o => o.c === code);
-                                    return (
-                                        <span key={code} className="bg-blue-100 text-[#00008B] text-xs font-bold px-2 py-1 rounded flex items-center">
-                                            {subj ? subj.n : code}
-                                            <span 
-                                                className="ml-2 cursor-pointer hover:text-red-600 font-bold"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleToggle(code);
-                                                }}
-                                            >×</span>
-                                        </span>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                    {isOpen && (
-                        <div className="absolute z-50 w-full bg-white border border-slate-300 mt-1 rounded-lg shadow-xl max-h-60 overflow-hidden flex flex-col">
-                            <input 
-                                type="text" 
-                                className="p-2 border-b outline-none bg-slate-50 text-sm" 
-                                placeholder="Buscar por nombre..." 
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                autoFocus
-                            />
-                            <div className="overflow-y-auto custom-scrollbar flex-1">
-                                {filteredOptions.map(opt => (
-                                    <div 
-                                        key={opt.c} 
-                                        className={`p-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-sm ${selected.includes(opt.c) ? 'bg-blue-50 text-[#00008B] font-bold' : ''}`}
-                                        onClick={() => handleToggle(opt.c)}
-                                    >
-                                        <span>{opt.n} <span className="text-xs text-gray-500 block">{opt.semestre}</span></span>
-                                        {selected.includes(opt.c) && <CheckSquare size={16}/>}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    {isOpen && <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>}
+                <div className={`fixed bottom-0 right-0 p-2 bg-white/90 border-t text-xs font-bold ${color} flex items-center gap-1 z-50`}>
+                    <Database size={12}/> {status}
                 </div>
             );
         };
 
-        const subjectsMap = {};
-        curriculumData.forEach(sem => sem.subs.forEach(sub => subjectsMap[sub.c] = sub));
-
-        // --- DEFINICIÓN DE PASOS DEL WIZARD ---
-        const STEPS = [
-            { id: 1, title: "Inicio", icon: Info },
-            { id: 2, title: "Identificación", icon: UserCheck },
-            { id: 3, title: "Académico", icon: GraduationCap },
-            { id: 4, title: "Situación Actual", icon: BarChart2 },
-            { id: 5, title: "Reprobadas", icon: BookX },
-            { id: 6, title: "Pendientes", icon: Clock },
-            { id: 7, title: "Adelantadas", icon: CheckCircle },
-            { id: 8, title: "Expectativas", icon: Lightbulb },
-            { id: 9, title: "Medidas", icon: ThumbsUp },
-            { id: 10, title: "Finalizar", icon: Send },
-        ];
-
-        function App() {
-            const [step, setStep] = useState(1);
+        const Login = ({ onLogin }) => {
+            const [creds, setCreds] = useState({email: '', pass: ''});
             const [loading, setLoading] = useState(false);
-            const [searching, setSearching] = useState(false);
-            const [status, setStatus] = useState('idle');
-            const [statusMessage, setStatusMessage] = useState('');
-            const [isEditing, setIsEditing] = useState(false);
-            const [searchCode, setSearchCode] = useState('');
-            // REMOVED PIN STATE
-            const [validationError, setValidationError] = useState('');
-            const [duplicateError, setDuplicateError] = useState(false);
-            const [consent, setConsent] = useState(false);
-            const [q15OtrosChecked, setQ15OtrosChecked] = useState(false);
-            const navRef = useRef(null);
 
-            // ADMIN STATE
-            const [showAdminLogin, setShowAdminLogin] = useState(false);
-            const [isAdmin, setIsAdmin] = useState(false);
-            const [adminEmail, setAdminEmail] = useState("");
-            const [adminPass, setAdminPass] = useState("");
-
-            const [formData, setFormData] = useState({
-                // Datos Personales - NO PIN
-                nombre: '', codigoRegistro: '', telefono: '', email: '', semestre: '',
-                anioIngreso: '', asignaturasAprobadas: '', ppa: '',
-                // Encuesta
-                q1_semestre_actual: '', q2_carga_materias: '', q3_trabaja: '', q4_horas_estudio: '', q5_avance: '',
-                q6_reprobadas: [], q7_razones_reprobacion: '',
-                q8_troncales_pendientes: [], q9_electivas_pendientes: [], q10_afectacion: '', q10_afectacion_detalle: '',
-                q11_troncales_adelantadas: [], q12_electivas_adelantadas: [],
-                q13_sentimiento: '', q14_aporte: '', q14_aporte_otro: '',
-                q15_medidas: [], q15_medidas_otro: '', q16_prioridad: '',
-                q17_propuesta: ''
-            });
-
-            const [approvedSubjects, setApprovedSubjects] = useState(new Set());
-            const [originalCode, setOriginalCode] = useState(null);
-
-            // Auto-scroll del nav cuando cambia el paso
-            useEffect(() => {
-                if (navRef.current) {
-                    const activeStepEl = navRef.current.querySelector(`[data-step="${step}"]`);
-                    if (activeStepEl) {
-                        activeStepEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                    }
-                }
-                window.scrollTo(0, 0);
-            }, [step]);
-
-            useEffect(() => {
-                const approvedArray = Array.from(approvedSubjects);
-                let currentSem = '1er Semestre';
-                if (approvedArray.length > 0) {
-                    let maxSem = 0;
-                    curriculumData.forEach((sem) => {
-                        const hasApprovedInSem = sem.subs.some(s => approvedSubjects.has(s.c));
-                        if (hasApprovedInSem && sem.id <= 10) maxSem = Math.max(maxSem, sem.id);
-                    });
-                    if(maxSem > 0) currentSem = `${maxSem}º Semestre`;
-                }
-                setFormData(prev => ({ ...prev, semestre: currentSem, asignaturasAprobadas: approvedArray.join(', ') }));
-            }, [approvedSubjects]);
-
-            // Validación Codigo vs Año
-            useEffect(() => {
-                const { codigoRegistro, anioIngreso } = formData;
-                if (codigoRegistro.length >= 3 && anioIngreso) {
-                    if (codigoRegistro.startsWith('2')) {
-                        const yearDigits = codigoRegistro.substring(1, 3);
-                        if (!String(anioIngreso).endsWith(yearDigits)) {
-                            setValidationError(`Inconsistencia: El código inicia con 2, por lo que indica ingreso en 20${yearDigits}`);
-                        } else {
-                            setValidationError('');
-                        }
-                    } else {
-                        setValidationError('');
-                    }
-                } else {
-                    setValidationError('');
-                }
-            }, [formData.codigoRegistro, formData.anioIngreso]);
-
-            // Validación duplicado (Solo si NO es admin, los admins pueden buscar cualquiera)
-            useEffect(() => {
-                if (formData.codigoRegistro.length === 9 && !isEditing && !isAdmin) {
-                    fetch(`${API_URL}?action=exists&code=${formData.codigoRegistro}`)
-                        .then(res => res.json())
-                        .then(existe => setDuplicateError(existe))
-                        .catch(err => console.error("Error API", err));
-                } else setDuplicateError(false);
-            }, [formData.codigoRegistro, isEditing, isAdmin]);
-
-            const handleChange = (e) => {
-                const { name, value, type, checked } = e.target;
-                if (name === 'codigoRegistro' || name === 'telefono' || name === 'q2_carga_materias' || name === 'q4_horas_estudio') {
-                    const val = value.replace(/\D/g, '');
-                    if (name === 'codigoRegistro') setFormData(prev => ({ ...prev, [name]: val.slice(0,9) }));
-                    else setFormData(prev => ({ ...prev, [name]: val }));
-                    return;
-                }
-                if (name === 'q15_medidas') {
-                    const current = formData.q15_medidas;
-                    if (value === 'Otros') setQ15OtrosChecked(checked);
-                    if (checked) setFormData(prev => ({ ...prev, q15_medidas: [...current, value] }));
-                    else setFormData(prev => ({ ...prev, q15_medidas: current.filter(item => item !== value) }));
-                    return;
-                }
-                setFormData(prev => ({ ...prev, [name]: value }));
-            };
-
-            const isUnlocked = (subject) => {
-                const isElective = curriculumData.find(sem => sem.id === 14).subs.some(s => s.c === subject.c);
-                if (isElective) {
-                    const sem1Codes = curriculumData[0].subs.map(s => s.c);
-                    const hasPassedAllSem1 = sem1Codes.every(code => approvedSubjects.has(code));
-                    if (!hasPassedAllSem1) return false; 
-                }
-                if (subject.req.length === 0) return true;
-                return subject.req.every(reqCode => approvedSubjects.has(reqCode));
-            };
-
-            const isSpecialtyBlocked = (group) => {
-                if (!group) return false;
-                for (const code of approvedSubjects) {
-                    for (const sem of curriculumData) {
-                        if (sem.type === 'special' && sem.group && sem.group !== group) {
-                            if (sem.subs.find(s => s.c === code)) return true;
-                        }
-                    }
-                }
-                return false;
-            };
-
-            const toggleSubject = (code) => {
-                const newSet = new Set(approvedSubjects);
-                if (newSet.has(code)) newSet.delete(code);
-                else newSet.add(code);
-                setApprovedSubjects(newSet);
-            };
-
-            const toggleSemester = (semIndex) => {
-                const sem = curriculumData[semIndex];
-                if (isSpecialtyBlocked(sem.group)) return;
-                const allInSem = sem.subs.map(s => s.c);
-                const allApproved = allInSem.every(c => approvedSubjects.has(c));
-                const newSet = new Set(approvedSubjects);
-                if (allApproved) allInSem.forEach(c => newSet.delete(c));
-                else sem.subs.forEach(sub => newSet.add(sub.c));
-                setApprovedSubjects(newSet);
-            };
-
-            // --- ADMIN LOGIN LOGIC ---
-            const handleAdminLogin = async (e) => {
+            const submit = async (e) => {
                 e.preventDefault();
-                setSearching(true);
-                setStatusMessage('');
+                setLoading(true);
                 try {
-                    const response = await fetch(`${API_URL}?action=adminLogin&email=${adminEmail}&pass=${adminPass}`);
-                    const result = await response.json();
-                    if (result.success) {
-                        setIsAdmin(true);
-                        setShowAdminLogin(false);
-                    } else {
-                        alert("Credenciales incorrectas");
-                    }
-                } catch (error) {
-                    alert("Error de conexión");
-                } finally {
-                    setSearching(false);
-                }
+                    const res = await api('adminLogin', creds);
+                    if (res.success) onLogin(); else alert("Acceso denegado");
+                } catch (e) { alert(e.message); }
+                setLoading(false);
             };
-
-            const handleSearch = (e) => {
-                e.preventDefault();
-                // ONLY ADMIN SEARCH NOW
-                if(!isAdmin) return; 
-                
-                if(!searchCode) { setStatusMessage('Ingresa el código.'); setStatus('error'); return; }
-                
-                setSearching(true); setStatus('idle');
-
-                const action = 'adminSearch'; // Always adminSearch here
-                fetch(`${API_URL}?action=${action}&code=${searchCode}`)
-                    .then(res => res.json())
-                    .then(result => {
-                        setSearching(false);
-                        if (result && !result.error) {
-                            const aprobadasArr = String(result.asignaturasAprobadas || '').split(',').map(s => s.trim()).filter(s => s);
-                            setApprovedSubjects(new Set(aprobadasArr));
-                            setFormData({
-                                ...formData, ...result,
-                                nombre: result.nombre, 
-                                codigoRegistro: String(result.codigoRegistro),
-                                telefono: result.telefono || '', 
-                                email: result.email || '',
-                                semestre: result.semestre,
-                                anioIngreso: result.anioIngreso, 
-                                asignaturasAprobadas: result.asignaturasAprobadas,
-                                ppa: result.ppa, 
-                                // Pin not returned
-                                q6_reprobadas: result.q6_reprobadas ? result.q6_reprobadas.split(', ') : [],
-                                q8_troncales_pendientes: result.q8_troncales_pendientes ? result.q8_troncales_pendientes.split(', ') : [],
-                                q9_electivas_pendientes: result.q9_electivas_pendientes ? result.q9_electivas_pendientes.split(', ') : [],
-                                q11_troncales_adelantadas: result.q11_troncales_adelantadas ? result.q11_troncales_adelantadas.split(', ') : [],
-                                q12_electivas_adelantadas: result.q12_electivas_adelantadas ? result.q12_electivas_adelantadas.split(', ') : [],
-                                q15_medidas: result.q15_medidas ? result.q15_medidas.split(', ') : []
-                            });
-                            if (result.q15_medidas && result.q15_medidas.includes("Otros")) setQ15OtrosChecked(true);
-                            setOriginalCode(String(result.codigoRegistro));
-                            setIsEditing(true); setStatusMessage('Perfil cargado.'); setStatus('info');
-                            setStep(2); 
-                        } else {
-                            setStatusMessage(result.error || 'No encontrado.'); setStatus('error');
-                        }
-                    })
-                    .catch(() => { setSearching(false); setStatusMessage('Error de conexión.'); setStatus('error'); });
-            };
-
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                // Admin can skip validations if needed, but safer to keep basic ones
-                if (!isAdmin && String(formData.anioIngreso).length !== 4) {
-                    setStatusMessage('El Año de Ingreso debe tener 4 dígitos.'); setStatus('error'); return;
-                }
-                if (!isAdmin && (validationError || duplicateError)) {
-                    setStatusMessage('Revisa los errores.'); setStatus('error'); return;
-                }
-                setLoading(true); setStatus('idle');
-                const payload = { 
-                    ...formData, 
-                    // NO PIN
-                    codigoRegistro: `'${formData.codigoRegistro}`, 
-                    codigoOriginal: isEditing ? `'${originalCode}` : null,
-                    q6_reprobadas: formData.q6_reprobadas.join(', '),
-                    q8_troncales_pendientes: formData.q8_troncales_pendientes.join(', '),
-                    q9_electivas_pendientes: formData.q9_electivas_pendientes.join(', '),
-                    q11_troncales_adelantadas: formData.q11_troncales_adelantadas.join(', '),
-                    q12_electivas_adelantadas: formData.q12_electivas_adelantadas.join(', '),
-                    q15_medidas: formData.q15_medidas.join(', ')
-                };
-
-                fetch(API_URL, {
-                    method: 'POST', mode: 'no-cors',
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify(payload)
-                })
-                .then(() => {
-                    setStatus('success'); setStatusMessage("Enviado correctamente.");
-                    setFormData({
-                        nombre: '', codigoRegistro: '', telefono: '', email: '', semestre: '',
-                        anioIngreso: '', asignaturasAprobadas: '', ppa: '',
-                        q1_semestre_actual: '', q2_carga_materias: '', q3_trabaja: '', q4_horas_estudio: '', q5_avance: '',
-                        q6_reprobadas: [], q7_razones_reprobacion: '',
-                        q8_troncales_pendientes: [], q9_electivas_pendientes: [], q10_afectacion: '', q10_afectacion_detalle: '',
-                        q11_troncales_adelantadas: [], q12_electivas_adelantadas: [],
-                        q13_sentimiento: '', q14_aporte: '', q14_aporte_otro: '',
-                        q15_medidas: [], q15_medidas_otro: '', q16_prioridad: '',
-                        q17_propuesta: ''
-                    });
-                    setApprovedSubjects(new Set());
-                    setOriginalCode(null); setSearchCode(''); setIsEditing(false); setLoading(false);
-                    setStep(1); setConsent(false); setQ15OtrosChecked(false);
-                    // Do not reset isAdmin so they can continue working
-                })
-                .catch(err => {
-                    console.error(err);
-                    setStatus('error'); setStatusMessage('Error al enviar.'); setLoading(false);
-                });
-            };
-
-            const canProceedToStep3 = () => formData.nombre && formData.codigoRegistro.length === 9 && formData.telefono && formData.email && String(formData.anioIngreso).length === 4 && formData.ppa && !validationError && (!duplicateError || isAdmin);
-            
-            // Función genérica para renderizar cada paso
-            const renderSurveyStep = (title, content) => (
-                <div className="max-w-4xl mx-auto fade-in pb-24">
-                    <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden mb-6">
-                        <div className="bg-slate-50 px-8 py-6 border-b border-slate-200 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <MessageSquare className="text-[#00008B] w-8 h-8" />
-                                <div>
-                                    <h2 className="text-xl font-bold text-slate-800">Encuesta de Transición</h2>
-                                    <p className="text-sm text-slate-500">Sección: {title}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-8 space-y-6">{content}</div>
-                    </div>
-                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center z-50">
-                        <button onClick={() => setStep(step - 1)} className="text-slate-500 font-bold hover:text-slate-800 flex items-center gap-2 px-4"><ArrowLeft size={18}/> Atrás</button>
-                        {step === 10 ? (
-                            <button onClick={handleSubmit} disabled={loading} className={`px-8 py-3 rounded-full font-bold text-white shadow-lg flex items-center gap-2 ${loading ? 'bg-slate-500' : 'bg-[#00008B] hover:bg-blue-900'}`}>{loading ? 'Enviando...' : isAdmin ? 'Actualizar (Admin)' : 'Finalizar Todo'} <Send size={18}/></button>
-                        ) : (
-                            <button onClick={() => setStep(step + 1)} className="bg-[#00008B] text-white font-bold py-2 px-8 rounded-lg shadow-md flex items-center gap-2 hover:bg-blue-900">Siguiente <ArrowRight size={18}/></button>
-                        )}
-                    </div>
-                </div>
-            );
-
-            // --- ADMIN MODAL ---
-            if (showAdminLogin) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-                        <div className="bg-white p-8 rounded-xl shadow-lg max-w-sm w-full">
-                            <h2 className="text-xl font-bold text-[#00008B] mb-4 flex items-center gap-2"><Shield /> Acceso Administrativo</h2>
-                            <form onSubmit={handleAdminLogin} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm text-gray-700">Correo Electrónico</label>
-                                    <input type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} className="w-full p-2 border rounded" required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-700">Contraseña Maestra</label>
-                                    <input type="password" value={adminPass} onChange={e => setAdminPass(e.target.value)} className="w-full p-2 border rounded" required />
-                                </div>
-                                <div className="flex gap-2">
-                                    <button type="button" onClick={() => setShowAdminLogin(false)} className="flex-1 p-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
-                                    <button type="submit" disabled={searching} className="flex-1 bg-[#00008B] text-white p-2 rounded hover:bg-blue-900">{searching ? '...' : 'Entrar'}</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                );
-            }
 
             return (
-                <div className="min-h-screen pb-20">
-                    <div className="bg-[#8B0000] text-white shadow-lg border-b-4 border-[#00008B] sticky top-0 z-50">
-                        <div className="max-w-7xl mx-auto px-4 py-2">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-1 bg-white rounded-full shadow-md text-[#8B0000]">
-                                        {LOGO_URL !== "PEGAR_URL_LOGO_AQUI" ? <img src={LOGO_URL} alt="Logo" className="w-10 h-10 object-contain" /> : <i className="fa-solid fa-university text-2xl"></i>}
-                                    </div>
-                                    <div>
-                                        <h1 className="text-lg font-bold font-serif tracking-tight leading-tight">Carrera de Psicología</h1>
-                                        <p className="text-red-100 text-[10px] sm:text-xs">Sistema de Control Académico</p>
-                                    </div>
-                                </div>
-                                {isAdmin && <div className="bg-white text-[#8B0000] px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><Shield size={12}/> MODO ADMIN</div>}
-                            </div>
-                            {/* Navegación Horizontal con Scroll */}
-                            <div ref={navRef} className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                                {STEPS.map((s) => (
-                                    <div 
-                                        key={s.id}
-                                        data-step={s.id}
-                                        className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1 ${step === s.id ? 'bg-white text-[#8B0000]' : step > s.id ? 'bg-[#5a0000] text-red-200' : 'bg-[#700000] text-red-300'}`}
-                                    >
-                                        <s.icon size={12} /> {s.id}. {s.title}
-                                    </div>
-                                ))}
-                            </div>
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <form onSubmit={submit} className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm border-t-4 border-[#8B0000] space-y-4">
+                        <h2 className="text-2xl font-bold text-center">Acceso Editor</h2>
+                        <input className="w-full p-2 border rounded" type="email" placeholder="Email" value={creds.email} onChange={e=>setCreds({...creds, email: e.target.value})} required />
+                        <input className="w-full p-2 border rounded" type="password" placeholder="Contraseña" value={creds.pass} onChange={e=>setCreds({...creds, pass: e.target.value})} required />
+                        <button disabled={loading} className="w-full bg-[#8B0000] text-white p-2 rounded hover:bg-red-900 font-bold transition">
+                            {loading ? 'Verificando...' : 'Ingresar'}
+                        </button>
+                    </form>
+                </div>
+            );
+        };
+
+        const Dashboard = ({ onCreate, onEdit, onLogout }) => {
+            const [forms, setForms] = useState([]);
+            const [loading, setLoading] = useState(true);
+
+            const load = () => {
+                setLoading(true);
+                api('getFormsList', { onlyPublic: false })
+                    .then(data => { setForms(Array.isArray(data) ? data : []); setLoading(false); })
+                    .catch(() => { setForms([]); setLoading(false); });
+            };
+
+            useEffect(load, []);
+
+            const del = async (e, id) => {
+                e.stopPropagation();
+                if(!confirm("¿Borrar?")) return;
+                try { await api('deleteForm', { formId: id }, 'POST'); load(); } catch(e){ alert(e.message); }
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto p-6">
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-3xl font-bold text-gray-800">Cuestionarios</h2>
+                        <div className="flex gap-2">
+                            <button onClick={onCreate} className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 flex items-center gap-2"><Plus size={18}/> Nuevo</button>
+                            <button onClick={onLogout} className="text-red-600 px-3 py-2 hover:bg-red-50 rounded"><LogOut size={18}/></button>
                         </div>
                     </div>
-
-                    <div className="max-w-7xl mx-auto px-4 py-8">
-                        {/* PASO 1: INICIO */}
-                        {step === 1 && (
-                            <div className="space-y-8 fade-in">
-                                <div className="bg-white border-t-4 border-[#00008B] p-8 rounded-lg shadow-md">
-                                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                                        <div className="bg-blue-50 p-6 rounded-full self-center md:self-start">
-                                            <Info className="text-[#00008B] w-12 h-12" />
+                    {loading ? <div className="text-center p-10"><RefreshCw className="animate-spin inline"/> Cargando...</div> : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {forms.map(f => (
+                                <div key={f.id} className="bg-white rounded-lg shadow hover:shadow-lg border border-gray-200 overflow-hidden">
+                                    <div className="p-5">
+                                        <div className="flex justify-between mb-2">
+                                            <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${f.status==='public'?'bg-green-100 text-green-800':'bg-gray-200'}`}>{f.status}</span>
+                                            <button onClick={(e)=>del(e,f.id)} className="text-red-400 hover:text-red-600"><Trash2 size={14}/></button>
                                         </div>
-                                        <div className="space-y-6 text-slate-700 text-sm leading-relaxed w-full">
-                                            <div>
-                                                <h2 className="text-2xl font-bold text-[#00008B] mb-2 font-serif">Simulación de Transición - Plan 148-2</h2>
-                                                <p className="text-base text-slate-600">Estimado(a) estudiante: La Carrera de Psicología se encuentra en la fase de ensayo logístico para la implementación del nuevo Plan de Estudios.</p>
-                                            </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
-                                                    <h3 className="font-bold text-[#00008B] mb-3 flex items-center gap-2 text-lg"><Target size={20}/> Objetivo</h3>
-                                                    <p className="text-justify text-slate-600">El presente cuestionario tiene como objetivo realizar una simulación de la transición para evaluar cómo el nuevo Plan podría influir en su trayectoria formativa.</p>
-                                                </div>
-                                                <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
-                                                    <h3 className="font-bold text-[#00008B] mb-3 flex items-center gap-2 text-lg"><ListChecks size={20}/> Consigna</h3>
-                                                    <p className="text-justify text-slate-600">Le solicitamos responder de manera <strong>sincera y completa</strong>. Sus respuestas serán tratadas con estricta confidencialidad.</p>
-                                                </div>
-                                            </div>
-                                            
-                                            {/* Si NO es admin, muestra consentimiento */}
-                                            {!isAdmin && (
-                                                <div className="mt-8 border-t pt-6 flex flex-col items-center gap-4">
-                                                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all">
-                                                        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="w-5 h-5 accent-[#00008B] cursor-pointer" />
-                                                        <span className="text-slate-700 font-medium select-none">He leído la consigna y acepto participar voluntariamente.</span>
-                                                    </label>
-                                                    <button onClick={() => setStep(2)} disabled={!consent} className={`font-bold py-3 px-10 rounded-full shadow-lg flex items-center gap-3 transition-all text-lg ${consent ? 'bg-[#00008B] hover:bg-blue-900 text-white transform hover:scale-105 active:scale-95' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}>Comenzar Registro <ArrowRight size={20}/></button>
-                                                </div>
-                                            )}
-                                            
-                                            {/* Si ES admin, botón directo */}
-                                            {isAdmin && (
-                                                <div className="mt-8 border-t pt-6 flex flex-col items-center gap-4">
-                                                    <p className="text-green-700 font-bold">Sesión Administrativa Activa</p>
-                                                    <button onClick={() => setStep(2)} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition-all text-lg flex items-center gap-2">Ir a Panel de Búsqueda <Search size={20}/></button>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <h3 className="font-bold text-[#8B0000] truncate">{f.title}</h3>
+                                        <p className="text-sm text-gray-500 line-clamp-2">{f.description}</p>
+                                    </div>
+                                    <div className="bg-gray-50 p-3 flex justify-around border-t">
+                                        <button onClick={()=>onEdit(f.id)} className="text-blue-600 font-bold text-sm flex items-center gap-1"><Edit size={14}/> Editar</button>
+                                        <button onClick={()=>window.open(API_URL.replace('/exec','/dev') + `?action=getResponses&formId=${f.id}`)} className="text-purple-600 font-bold text-sm flex items-center gap-1"><BarChart2 size={14}/> Datos</button>
                                     </div>
                                 </div>
-                                
-                                {/* CAJA DE BUSQUEDA / LOGIN ADMIN */}
-                                <div className="text-center">
-                                    {!isAdmin ? (
-                                        <>
-                                            <p className="text-sm text-slate-500 mb-4">Solo para personal autorizado:</p>
-                                            <button onClick={() => setShowAdminLogin(true)} className="text-xs text-slate-400 hover:text-[#00008B] underline">Acceso Administrativo</button>
-                                        </>
-                                    ) : (
-                                        <div className="max-w-md mx-auto bg-green-50 rounded-lg shadow-sm border border-green-200 p-6">
-                                            <h3 className="font-bold text-green-800 mb-2 flex items-center justify-center gap-2"><Search size={16}/> Búsqueda Global (Admin)</h3>
-                                            <div className="flex gap-2">
-                                                <input type="text" value={searchCode} onChange={(e) => setSearchCode(e.target.value.replace(/\D/g, '').slice(0, 9))} placeholder="Ingresa Código de Registro" className="w-full p-2 text-sm border border-green-300 rounded outline-none" />
-                                                <button onClick={handleSearch} disabled={searching} className="bg-green-700 text-white px-6 rounded text-sm hover:bg-green-800 font-bold">{searching ? '...' : 'Buscar'}</button>
-                                            </div>
-                                            <p className="text-xs text-green-600 mt-2">Puedes buscar cualquier registro sin necesidad del PIN.</p>
-                                            {statusMessage && <p className={`mt-2 text-xs font-bold ${status === 'error' ? 'text-red-600' : 'text-green-600'}`}>{statusMessage}</p>}
-                                        </div>
-                                    )}
-                                </div>
+                            ))}
+                            {forms.length===0 && <div className="col-span-full text-center py-10 text-gray-400 border border-dashed rounded">No hay cuestionarios.</div>}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const FormEditor = ({ formId, onBack }) => {
+            const [form, setForm] = useState(null);
+            const [saving, setSaving] = useState(false);
+            const [tab, setTab] = useState('build');
+
+            useEffect(() => {
+                if(formId === 'new') {
+                    setForm({ id: 'F'+Date.now(), settings: { title: "Nuevo", description: "", visibility: "private" }, sections: [{id: 's1', title: 'Sección 1', questions: []}] });
+                } else {
+                    api('getFormConfig', { formId }).then(setForm).catch(e => { alert(e.message); onBack(); });
+                }
+            }, [formId]);
+
+            const save = async () => {
+                if(!confirm("¿Guardar cambios?")) return;
+                setSaving(true);
+                try {
+                    const res = await api('saveForm', { form }, 'POST');
+                    if(res.success) alert("✅ Guardado Exitoso"); else alert("Error: "+res.message);
+                } catch(e) { alert("Error: "+e.message); }
+                setSaving(false);
+            };
+
+            const updateSettings = (k, v) => setForm(p => ({...p, settings: {...p.settings, [k]: v}}));
+            const addSection = () => setForm(p => ({...p, sections: [...p.sections, {id: 's'+Date.now(), title: "Nueva Sección", questions: []}]}));
+            const updateSection = (i, v) => setForm(p => { const s = [...p.sections]; s[i].title = v; return {...p, sections: s}; });
+            const delSection = (i) => { if(confirm("Borrar?")) setForm(p => { const s = [...p.sections]; s.splice(i,1); return {...p, sections: s}; }); };
+            const addQ = (si) => setForm(p => { const s = [...p.sections]; s[si].questions.push({id: 'q'+Date.now(), text: "Pregunta", type: "text"}); return {...p, sections: s}; });
+            const updateQ = (si, qi, k, v) => setForm(p => { const s = [...p.sections]; s[si].questions[qi][k] = (k==='options' && typeof v === 'string') ? v.split(',') : v; return {...p, sections: s}; });
+            const delQ = (si, qi) => setForm(p => { const s = [...p.sections]; s[si].questions.splice(qi,1); return {...p, sections: s}; });
+
+            if(!form) return <div className="p-10 text-center">Cargando...</div>;
+
+            return (
+                <div className="flex h-screen bg-gray-100">
+                    <div className="w-64 bg-white border-r flex flex-col">
+                        <div className="p-4 border-b">
+                            <button onClick={onBack} className="text-gray-500 hover:text-black mb-4 flex items-center gap-1"><ArrowLeft size={14}/> Volver</button>
+                            <h2 className="font-bold truncate">{form.settings.title}</h2>
+                        </div>
+                        <div className="p-2 space-y-1">
+                            <button onClick={()=>setTab('build')} className={`w-full text-left px-3 py-2 rounded ${tab==='build'?'bg-blue-50 text-blue-700 font-bold':'text-gray-600 hover:bg-gray-50'}`}>Constructor</button>
+                            <button onClick={()=>setTab('settings')} className={`w-full text-left px-3 py-2 rounded ${tab==='settings'?'bg-blue-50 text-blue-700 font-bold':'text-gray-600 hover:bg-gray-50'}`}>Configuración</button>
+                        </div>
+                        <div className="mt-auto p-4 border-t">
+                            <button onClick={save} disabled={saving} className="w-full bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700 disabled:opacity-50">{saving ? 'Guardando...' : 'Guardar Todo'}</button>
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-8">
+                        {tab === 'settings' && (
+                            <div className="max-w-xl mx-auto bg-white p-6 rounded shadow space-y-4">
+                                <h3 className="font-bold text-lg">Configuración</h3>
+                                <div><label className="block text-sm font-bold">Título</label><input className="w-full border p-2 rounded" value={form.settings.title} onChange={e=>updateSettings('title', e.target.value)} /></div>
+                                <div><label className="block text-sm font-bold">Descripción</label><textarea className="w-full border p-2 rounded h-24" value={form.settings.description} onChange={e=>updateSettings('description', e.target.value)} /></div>
+                                <div><label className="block text-sm font-bold">Visibilidad</label><select className="w-full border p-2 rounded" value={form.settings.visibility} onChange={e=>updateSettings('visibility', e.target.value)}><option value="private">Privado</option><option value="public">Público</option></select></div>
                             </div>
                         )}
-
-                        {/* ... (EL RESTO DE LOS PASOS 2-10 ES IDÉNTICO AL CÓDIGO ANTERIOR) ... */}
-                        {/* Se repite la estructura de renderizado de pasos */}
-                        
-                        {/* PASO 2: IDENTIFICACIÓN */}
-                        {step === 2 && (
-                            <div className="max-w-4xl mx-auto fade-in">
-                                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-                                    <div className="bg-slate-50 px-8 py-6 border-b border-slate-200 flex justify-between items-center">
-                                        <div className="flex items-center gap-3">
-                                            <UserCheck className="text-[#00008B] w-8 h-8" />
-                                            <div>
-                                                <h2 className="text-xl font-bold text-slate-800">Identificación del Estudiante</h2>
-                                                <p className="text-sm text-slate-500">Paso 2 de 10</p>
-                                            </div>
+                        {tab === 'build' && (
+                            <div className="max-w-3xl mx-auto space-y-6 pb-20">
+                                {form.sections.map((s, si) => (
+                                    <div key={s.id} className="bg-white rounded shadow border border-gray-200">
+                                        <div className="bg-blue-50 p-4 border-b flex justify-between items-center">
+                                            <input className="bg-transparent font-bold text-lg text-[#8B0000] w-full outline-none" value={s.title} onChange={e=>updateSection(si, e.target.value)} />
+                                            <button onClick={()=>delSection(si)} className="text-red-400 hover:text-red-600"><Trash2 size={16}/></button>
                                         </div>
-                                        <div className="text-right">
-                                            {isEditing && <span className="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full border border-orange-200">Modo Edición</span>}
-                                        </div>
-                                    </div>
-                                    <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-4">
-                                            <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider border-b pb-1">Datos Básicos</h3>
-                                            <div><label className="text-sm font-bold text-slate-700">Nombre Completo</label><input required name="nombre" value={formData.nombre} onChange={handleChange} className="w-full mt-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00008B] outline-none" placeholder="Ej. Juan Pérez" /></div>
-                                            <div>
-                                                <label className="text-sm font-bold text-slate-700">Código Registro</label>
-                                                <input required name="codigoRegistro" value={formData.codigoRegistro} onChange={handleChange} className={`w-full mt-1 p-3 border rounded-lg focus:ring-2 outline-none font-mono ${duplicateError ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-slate-300 focus:ring-[#00008B]'}`} placeholder="Ej. 219012345" />
-                                                {duplicateError && <span className="text-red-600 text-xs font-bold mt-1 block">⚠️ Este código ya está registrado.</span>}
-                                            </div>
-                                            {/* REMOVED PIN INPUT */}
-                                        </div>
-                                        <div className="space-y-4">
-                                            <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider border-b pb-1">Contacto y Académico</h3>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div><label className="text-sm font-bold text-slate-700">Teléfono</label><input required type="tel" name="telefono" value={formData.telefono} onChange={handleChange} className="w-full mt-1 p-3 border border-slate-300 rounded-lg outline-none" placeholder="77000000" /></div>
-                                                <div><label className="text-sm font-bold text-slate-700">Año Ingreso</label><input required type="number" name="anioIngreso" value={formData.anioIngreso} onChange={handleChange} className={`w-full mt-1 p-3 border rounded-lg outline-none ${validationError ? 'border-red-500 bg-red-50' : 'border-slate-300'}`} placeholder="Ej. 2021" /></div>
-                                            </div>
-                                            {validationError && <p className="text-xs text-red-600 font-bold -mt-2">{validationError}</p>}
-                                            <div><label className="text-sm font-bold text-slate-700">Correo Electrónico</label><input required type="email" name="email" value={formData.email} onChange={handleChange} className="w-full mt-1 p-3 border border-slate-300 rounded-lg outline-none" placeholder="correo@ejemplo.com" /></div>
-                                            <div>
-                                                <label className="text-sm font-bold text-slate-700">Promedio Ponderado (PPA)</label>
-                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                    {['< 51', '51-64', '65-75', '76-85', '86-100'].map(r => (
-                                                        <label key={r} className={`flex-1 min-w-[60px] text-center px-2 py-2 border rounded-md cursor-pointer transition-all text-xs font-bold ${formData.ppa === r ? 'bg-[#00008B] text-white border-[#00008B] shadow-md' : 'bg-white hover:bg-slate-50 text-slate-600'}`}>
-                                                            <input type="radio" name="ppa" value={r} checked={formData.ppa === r} onChange={handleChange} className="hidden" />{r}
-                                                        </label>
-                                                    ))}
+                                        <div className="p-4 space-y-4">
+                                            {s.questions.map((q, qi) => (
+                                                <div key={q.id} className="border p-4 rounded bg-gray-50/50 hover:shadow-sm">
+                                                    <div className="flex gap-2 mb-2">
+                                                        <input className="flex-1 p-2 border rounded" placeholder="Pregunta" value={q.text} onChange={e=>updateQ(si, qi, 'text', e.target.value)} />
+                                                        <select className="p-2 border rounded" value={q.type} onChange={e=>updateQ(si, qi, 'type', e.target.value)}><option value="text">Texto</option><option value="textarea">Párrafo</option><option value="select">Lista</option><option value="radio">Radio</option><option value="checkbox">Checkbox</option></select>
+                                                    </div>
+                                                    {['select','radio','checkbox'].includes(q.type) && <input className="w-full p-2 border rounded text-sm mb-2" placeholder="Opciones (separar por coma)" value={q.options?.join(',')} onChange={e=>updateQ(si, qi, 'options', e.target.value)} />}
+                                                    <div className="flex justify-between items-center">
+                                                        <input className="text-xs p-1 border rounded w-1/2" placeholder="URL Imagen" value={q.imageUrl||''} onChange={e=>updateQ(si, qi, 'imageUrl', e.target.value)} />
+                                                        <button onClick={()=>delQ(si, qi)} className="text-xs text-red-500 hover:underline">Eliminar</button>
+                                                    </div>
+                                                    {q.imageUrl && <img src={q.imageUrl} className="h-16 mt-2 rounded border" />}
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="bg-slate-50 px-8 py-4 border-t border-slate-200 flex justify-between">
-                                        <button onClick={() => setStep(1)} className="text-slate-500 font-bold hover:text-slate-700 flex items-center gap-2"><ArrowLeft size={18}/> Atrás</button>
-                                        <button onClick={() => canProceedToStep3() ? setStep(3) : alert("Completa todos los campos.")} className={`bg-[#00008B] text-white font-bold py-2 px-8 rounded-lg shadow-md flex items-center gap-2 ${!canProceedToStep3() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-900'}`}>Siguiente <ArrowRight size={18}/></button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {step === 3 && (
-                            <div className="fade-in space-y-8">
-                                <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 border-[#00008B]">
-                                    <div>
-                                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><GraduationCap className="text-[#00008B]"/> Situación Académica</h2>
-                                        <p className="text-sm text-slate-500">Selecciona las materias que has <strong>APROBADO</strong>.</p>
-                                    </div>
-                                    <div className="text-right bg-blue-50 px-4 py-2 rounded-lg">
-                                        <p className="text-xs text-blue-800 font-bold uppercase">Total Aprobadas</p>
-                                        <p className="text-2xl font-bold text-[#00008B]">{approvedSubjects.size} <span className="text-sm font-normal text-slate-500">materias</span></p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {curriculumData.map((sem, idx) => {
-                                        const locked = isSpecialtyBlocked(sem.group);
-                                        return (
-                                            <div key={idx} className={`bg-white rounded-xl shadow-sm border overflow-hidden ${locked ? 'specialty-locked' : ''}`}>
-                                                <div className={`${sem.colorHeader} px-4 py-3 flex justify-between items-center`}>
-                                                    <h4 className={`font-bold ${sem.colorText} flex items-center gap-2`}>{sem.icon && <i className={`fa-solid ${sem.icon}`}></i>}{sem.sem}</h4>
-                                                    {!locked && <button type="button" onClick={() => toggleSemester(idx)} className="text-xs px-2 py-1 rounded border border-current font-bold opacity-70 hover:opacity-100">Todo</button>}
-                                                </div>
-                                                <div className="p-4 space-y-2">
-                                                    {sem.subs.map(sub => {
-                                                        const isChecked = approvedSubjects.has(sub.c);
-                                                        const isElective = sem.id === 14;
-                                                        let infoMsg = "";
-                                                        if (isElective && !subjectMapHasSem1(approvedSubjects)) infoMsg = "Sugerencia: Aprobar 1er semestre primero";
-                                                        else if (sub.req.length > 0 && !isUnlocked(sub)) {
-                                                            const missing = sub.req.filter(r => !approvedSubjects.has(r)).map(r => subjectsMap[r]?.n || r).join(', ');
-                                                            if(missing) infoMsg = `Requisito sugerido: ${missing}`;
-                                                        }
-                                                        return (
-                                                            <label key={sub.c} title={infoMsg} className={`flex items-start gap-3 p-2 rounded border cursor-pointer transition-all ${isChecked ? 'bg-blue-50 border-blue-200 shadow-sm' : 'hover:bg-slate-50 border-transparent hover:border-slate-200'}`}>
-                                                                <input type="checkbox" className="mt-1 accent-[#00008B] w-4 h-4" checked={isChecked} disabled={locked} onChange={() => toggleSubject(sub.c)} />
-                                                                <div className="text-sm">
-                                                                    <div className={`font-bold ${isChecked ? 'text-[#00008B]' : 'text-slate-700'}`}>{sub.n}</div>
-                                                                    <div className="text-xs text-slate-400 flex items-center gap-1">{sub.c} {infoMsg && <span className="text-orange-500 ml-1"><AlertCircle size={10}/></span>}</div>
-                                                                </div>
-                                                            </label>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                                <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center z-50">
-                                    <button onClick={() => setStep(2)} className="text-slate-500 font-bold hover:text-slate-800 flex items-center gap-2 px-4"><ArrowLeft size={18}/> Atrás</button>
-                                    <button onClick={() => setStep(4)} className="bg-[#00008B] text-white font-bold py-2 px-8 rounded-lg shadow-md flex items-center gap-2 hover:bg-blue-900">Siguiente <ArrowRight size={18}/></button>
-                                </div>
-                                <div className="h-20"></div>
-                            </div>
-                        )}
-
-                        {step === 4 && renderSurveyStep("I. Datos Generales / Situación Actual", (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">1. Semestre que cursas actualmente</label>
-                                    <select name="q1_semestre_actual" value={formData.q1_semestre_actual} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white">
-                                        <option value="">Selecciona...</option>
-                                        {[1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n}º Semestre</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">2. Carga académica (Nº materias inscritas)</label>
-                                    <input type="number" name="q2_carga_materias" value={formData.q2_carga_materias} onChange={handleChange} className="w-full p-2 border rounded-lg" placeholder="0" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">3. ¿Trabajas mientras estudias?</label>
-                                    <div className="flex gap-4">
-                                        <label className="flex items-center gap-2"><input type="radio" name="q3_trabaja" value="Sí" checked={formData.q3_trabaja === "Sí"} onChange={handleChange} /> Sí</label>
-                                        <label className="flex items-center gap-2"><input type="radio" name="q3_trabaja" value="No" checked={formData.q3_trabaja === "No"} onChange={handleChange} /> No</label>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">4. Horas diarias dedicadas al estudio</label>
-                                    <input type="number" name="q4_horas_estudio" value={formData.q4_horas_estudio} onChange={handleChange} className="w-full p-2 border rounded-lg" placeholder="0" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">5. Estado general de avance académico</label>
-                                    <select name="q5_avance" value={formData.q5_avance} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white">
-                                        <option value="">Selecciona...</option>
-                                        {['Voy al día', 'Ligeramente atrasado(a)', 'Atraso moderado', 'Atraso significativo'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-                        ))}
-
-                        {step === 5 && renderSurveyStep("II. Materias Reprobadas", (
-                            <div className="space-y-4">
-                                <MultiSubjectSelect label="6. Indica las materias reprobadas" options={allSubjectsList} selected={formData.q6_reprobadas} onChange={(val) => setFormData(prev => ({...prev, q6_reprobadas: val}))} />
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">7. Razones principales de reprobación</label>
-                                    <textarea name="q7_razones_reprobacion" value={formData.q7_razones_reprobacion} onChange={handleChange} className="w-full p-2 border rounded-lg h-24" placeholder="Carga laboral, falta de comprensión, etc..."></textarea>
-                                </div>
-                            </div>
-                        ))}
-
-                        {step === 6 && renderSurveyStep("III. Materias Atrasadas", (
-                            <div className="space-y-4">
-                                <MultiSubjectSelect label="8. Materias troncales pendientes" options={allSubjectsList.filter(s => s.id !== 14)} selected={formData.q8_troncales_pendientes} onChange={(val) => setFormData(prev => ({...prev, q8_troncales_pendientes: val}))} />
-                                <MultiSubjectSelect label="9. Materias electivas pendientes" options={allSubjectsList.filter(s => s.c.startsWith("ELEC") || s.c.startsWith("COMP") || s.c.startsWith("LENG") || s.c.startsWith("ING"))} selected={formData.q9_electivas_pendientes} onChange={(val) => setFormData(prev => ({...prev, q9_electivas_pendientes: val}))} />
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">10. ¿Estas materias afectan tu avance?</label>
-                                    <div className="flex gap-4 flex-wrap">
-                                        {['Sí', 'No', 'No sé', 'Depende'].map(opt => (
-                                            <label key={opt} className="flex items-center gap-2">
-                                                <input type="radio" name="q10_afectacion" value={opt} checked={formData.q10_afectacion === opt} onChange={handleChange} /> {opt}
-                                            </label>
-                                        ))}
-                                    </div>
-                                    {formData.q10_afectacion === 'Depende' && (
-                                        <input type="text" name="q10_afectacion_detalle" value={formData.q10_afectacion_detalle} onChange={handleChange} className="w-full mt-2 p-2 border rounded-lg" placeholder="Explica..." />
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-
-                        {step === 7 && renderSurveyStep("IV. Materias Adelantadas", (
-                            <div className="space-y-4">
-                                <MultiSubjectSelect label="11. Materias troncales adelantadas" options={allSubjectsList.filter(s => s.id !== 14)} selected={formData.q11_troncales_adelantadas} onChange={(val) => setFormData(prev => ({...prev, q11_troncales_adelantadas: val}))} />
-                                <MultiSubjectSelect label="12. Materias electivas adelantadas" options={allSubjectsList.filter(s => s.c.startsWith("ELEC") || s.c.startsWith("COMP") || s.c.startsWith("LENG") || s.c.startsWith("ING"))} selected={formData.q12_electivas_adelantadas} onChange={(val) => setFormData(prev => ({...prev, q12_electivas_adelantadas: val}))} />
-                            </div>
-                        ))}
-
-                        {step === 8 && renderSurveyStep("V. Expectativas", (
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">13. ¿Cómo te sientes respecto a la implementación?</label>
-                                    <div className="space-y-2">
-                                        {[
-                                            "Motivado(a): lo veo como una oportunidad",
-                                            "Cauteloso(a): prefiero observar",
-                                            "Preocupado(a): temo que afecte mi avance",
-                                            "Indiferente: no creo que cambie mucho",
-                                            "Confundido(a): aún no comprendo bien"
-                                        ].map(opt => (
-                                            <label key={opt} className="flex items-center gap-2">
-                                                <input type="radio" name="q13_sentimiento" value={opt} checked={formData.q13_sentimiento === opt} onChange={handleChange} />
-                                                <span className="text-sm">{opt}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">14. ¿Qué crees que aportará el nuevo currículo?</label>
-                                    <div className="space-y-2">
-                                        {[
-                                            "Mejor organización del avance académico",
-                                            "Secuencias más claras y lógicas de contenido",
-                                            "Mayor flexibilidad",
-                                            "Claridad en perfiles y competencias",
-                                            "Ninguna de las anteriores",
-                                            "Otra opinión"
-                                        ].map(opt => (
-                                            <div key={opt}>
-                                                <label className="flex items-center gap-2">
-                                                    <input type="radio" name="q14_aporte" value={opt} checked={formData.q14_aporte === opt} onChange={handleChange} />
-                                                    <span className="text-sm">{opt}</span>
-                                                </label>
-                                                {opt === "Otra opinión" && formData.q14_aporte === "Otra opinión" && (
-                                                    <input type="text" name="q14_aporte_otro" value={formData.q14_aporte_otro} onChange={handleChange} className="w-full mt-1 ml-6 p-2 border rounded-lg text-sm" placeholder="Escribe tu opinión..." />
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-
-                        {step === 9 && renderSurveyStep("VI. Medidas de Transición", (
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">15. Medidas útiles para tu avance (Selección Múltiple)</label>
-                                    <div className="space-y-2">
-                                        {[
-                                            "Cursos de verano intensivos",
-                                            "Semestres de igualación sin prerequisitos",
-                                            "Cursos especiales de nivelación en el semestre",
-                                            "Tutorías académicas personalizadas",
-                                            "Adaptación flexible de prerequisitos por única vez",
-                                            "Otros"
-                                        ].map(opt => (
-                                            <div key={opt}>
-                                                <label className="flex items-center gap-2">
-                                                    <input type="checkbox" name="q15_medidas" value={opt} checked={formData.q15_medidas.includes(opt)} onChange={handleChange} />
-                                                    <span className="text-sm">{opt}</span>
-                                                </label>
-                                                {opt === "Otros" && q15OtrosChecked && (
-                                                    <input type="text" name="q15_medidas_otro" value={formData.q15_medidas_otro} onChange={handleChange} className="w-full mt-1 ml-6 p-2 border rounded-lg text-sm" placeholder="Especifica..." />
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                {formData.q15_medidas.length > 0 && (
-                                    <div className="fade-in">
-                                        <label className="block text-sm font-bold text-slate-700 mb-2">16. Prioridad absoluta (Elige una de las seleccionadas arriba)</label>
-                                        <select name="q16_prioridad" value={formData.q16_prioridad} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white">
-                                            <option value="">Selecciona tu prioridad...</option>
-                                            {formData.q15_medidas.map(opt => (
-                                                <option key={opt} value={opt}>{opt}</option>
                                             ))}
-                                        </select>
+                                            <button onClick={()=>addQ(si)} className="w-full py-2 border-2 border-dashed rounded text-gray-400 hover:text-blue-500 font-bold">+ Pregunta</button>
+                                        </div>
                                     </div>
-                                )}
+                                ))}
+                                <button onClick={addSection} className="w-full py-3 bg-white border shadow text-gray-600 font-bold hover:bg-gray-50 rounded">+ Añadir Sección</button>
                             </div>
-                        ))}
+                        )}
+                    </div>
+                </div>
+            );
+        };
 
-                        {step === 10 && renderSurveyStep("VII. Comentarios Finales", (
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">17. Propuesta para mejorar la transición</label>
-                                <textarea name="q17_propuesta" value={formData.q17_propuesta} onChange={handleChange} className="w-full p-2 border rounded-lg h-32" placeholder="Escribe tu propuesta..."></textarea>
+        const StudentForm = ({ form, onBack }) => {
+            const [answers, setAnswers] = useState({});
+            const [sending, setSending] = useState(false);
+
+            const handleChange = (qid, val) => setAnswers(p => ({ ...p, [qid]: val }));
+
+            const submit = async () => {
+                if(!confirm("¿Enviar?")) return;
+                setSending(true);
+                try {
+                    const res = await api('submitResponse', { formId: form.id, data: answers }, 'POST');
+                    if (res.success) { alert("¡Enviado!"); onBack(); }
+                    else alert("Error: " + res.message);
+                } catch (e) { alert("Error: " + e.message); }
+                setSending(false);
+            };
+
+            return (
+                <div className="bg-gray-100 min-h-screen pb-20">
+                    <div className="bg-[#8B0000] text-white h-16 flex items-center px-6 shadow sticky top-0 z-50 justify-between">
+                        <button onClick={onBack} className="flex items-center gap-1 font-bold opacity-80 hover:opacity-100"><ArrowLeft size={18}/> Salir</button>
+                        <button onClick={submit} disabled={sending} className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold shadow flex items-center gap-2">
+                            {sending ? 'Enviando...' : <>Enviar <Send size={16}/></>}
+                        </button>
+                    </div>
+                    
+                    <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
+                        <div className="bg-white rounded-lg shadow-lg border-t-8 border-[#8B0000] p-8">
+                            <h1 className="text-3xl font-bold text-gray-800 mb-2">{form.settings.title}</h1>
+                            <p className="text-gray-600 whitespace-pre-wrap">{form.settings.description}</p>
+                        </div>
+
+                        {form.sections.map(s => (
+                            <div key={s.id} className="bg-white rounded-lg shadow overflow-hidden">
+                                <div className="bg-[#8B0000] text-white px-6 py-3 font-bold">{s.title}</div>
+                                <div className="p-6 space-y-8">
+                                    {s.questions.map(q => (
+                                        <div key={q.id} className="space-y-2">
+                                            <label className="block text-gray-800 font-bold">{q.text} {q.required && <span className="text-red-500">*</span>}</label>
+                                            {q.imageUrl && <img src={q.imageUrl} className="max-w-full h-auto rounded border mb-2 max-h-64 object-contain" />}
+                                            
+                                            {q.type === 'text' && <input className="w-full p-3 border rounded" onChange={e=>handleChange(q.id, e.target.value)} />}
+                                            {q.type === 'textarea' && <textarea className="w-full p-3 border rounded h-24" onChange={e=>handleChange(q.id, e.target.value)} />}
+                                            {q.type === 'number' && <input type="number" className="w-full p-3 border rounded" onChange={e=>handleChange(q.id, e.target.value)} />}
+                                            {q.type === 'select' && <select className="w-full p-3 border rounded bg-white" onChange={e=>handleChange(q.id, e.target.value)}><option value="">Seleccionar...</option>{q.options?.map(o=><option key={o} value={o}>{o}</option>)}</select>}
+                                            {q.type === 'radio' && <div className="space-y-2">{q.options?.map(o => <label key={o} className="flex items-center gap-2 cursor-pointer border p-2 rounded hover:bg-gray-50"><input type="radio" name={q.id} value={o} onChange={e=>handleChange(q.id, e.target.value)} /><span>{o}</span></label>)}</div>}
+                                            {q.type === 'checkbox' && <div className="space-y-2">{q.options?.map(o => <label key={o} className="flex items-center gap-2 cursor-pointer border p-2 rounded hover:bg-gray-50"><input type="checkbox" value={o} onChange={e => { const old = answers[q.id] || []; handleChange(q.id, e.target.checked ? [...old, o] : old.filter(x=>x!==o)); }} /><span>{o}</span></label>)}</div>}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
             );
-        }
+        };
+
+        const App = () => {
+            const [view, setView] = useState('home');
+            const [activeForm, setActiveForm] = useState(null);
+            const [forms, setForms] = useState([]);
+            const [loading, setLoading] = useState(false);
+
+            useEffect(() => {
+                setLoading(true);
+                api('getFormsList', { onlyPublic: true }).then(d => { setForms(Array.isArray(d)?d:[]); setLoading(false); }).catch(()=>setLoading(false));
+            }, []);
+
+            const openForm = (id) => {
+                setLoading(true);
+                api('getFormConfig', { formId: id }).then(d => { setActiveForm(d); setView('student'); setLoading(false); }).catch(e => { alert(e.message); setLoading(false); });
+            };
+
+            if (view === 'home') return (
+                <div>
+                    <div className="bg-[#8B0000] text-white shadow-lg sticky top-0 z-50 h-16 flex items-center px-6 justify-between">
+                        <div className="flex items-center gap-3"><div className="bg-white p-1 rounded-full"><img src={LOGO_URL} className="w-8 h-8 object-contain" /></div><h1 className="font-serif font-bold text-lg tracking-wide">Plataforma Académica</h1></div>
+                        <button onClick={() => setView('login')} className="text-xs opacity-70 hover:opacity-100 flex items-center gap-1 border border-white/30 px-2 py-1 rounded"><Lock size={12}/> Editor</button>
+                    </div>
+                    <div className="max-w-4xl mx-auto p-8">
+                        <div className="text-center mb-12"><h2 className="text-4xl font-bold text-gray-800 mb-4">Bienvenido</h2><p className="text-gray-600">Selecciona un cuestionario.</p></div>
+                        {loading ? <div className="text-center">Cargando...</div> : 
+                            <div className="grid gap-4">
+                                {forms.map(f => (
+                                    <div key={f.id} onClick={() => openForm(f.id)} className="bg-white p-6 rounded-xl shadow border-l-8 border-[#8B0000] cursor-pointer hover:shadow-lg transition flex justify-between items-center group">
+                                        <div><h3 className="text-xl font-bold text-gray-800 group-hover:text-red-700">{f.title}</h3><p className="text-gray-500 text-sm mt-1 line-clamp-2">{f.description}</p></div>
+                                        <ArrowRight className="text-gray-300 group-hover:text-red-600" />
+                                    </div>
+                                ))}
+                                {forms.length === 0 && <div className="text-center p-10 text-gray-400 border border-dashed rounded">No hay cuestionarios públicos.</div>}
+                            </div>
+                        }
+                    </div>
+                    <StatusFooter />
+                </div>
+            );
+
+            if (view === 'login') return <div><div className="bg-[#8B0000] h-16 w-full fixed top-0"></div><div className="pt-20"><Login onLogin={() => setView('dash')} /></div><StatusFooter /></div>;
+            if (view === 'dash') return <div><div className="bg-[#8B0000] text-white h-16 flex items-center px-6 shadow"><span className="font-bold">Panel Editor</span></div><Dashboard onCreate={() => { setActiveForm('new'); setView('editor'); }} onEdit={(id) => { setActiveForm(id); setView('editor'); }} onLogout={() => setView('home')} /><StatusFooter /></div>;
+            if (view === 'editor') return <><FormEditor formId={activeForm} onBack={() => setView('dash')} /><StatusFooter /></>;
+            if (view === 'student') return <><StudentForm form={activeForm} onBack={() => setView('home')} /><StatusFooter /></>;
+            return <div>Error estado</div>;
+        };
 
         const root = createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
 </body>
 </html>
-
