@@ -20,27 +20,27 @@
         body { padding: 0; margin: 0; background-color: #f8fafc; }
         .subject-disabled { opacity: 0.5; cursor: not-allowed; background-color: #f3f4f6; }
         .specialty-locked { filter: grayscale(100%); opacity: 0.4; pointer-events: none; border: 2px dashed #9ca3af; }
-        /* Animación suave para cambio de pasos */
-        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Custom Scrollbar for dropdowns */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+        /* Hide scrollbar for step navigation on mobile */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import React, { useState, useEffect } from 'react';
+        import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { User, Send, CheckCircle, AlertCircle, Calendar, Layers, Award, Search, Edit3, Lock, AlertTriangle, KeyRound, BookOpen, Info, Target, ListChecks, Layout, Phone, Mail, ArrowRight, ArrowLeft, FileText, UserCheck, GraduationCap, CheckSquare } from 'lucide-react';
+        import { User, Send, CheckCircle, AlertCircle, Calendar, Layers, Award, Search, Edit3, Lock, AlertTriangle, KeyRound, BookOpen, Info, Target, ListChecks, Layout, Phone, Mail, ArrowRight, ArrowLeft, FileText, UserCheck, GraduationCap, CheckSquare, MessageSquare, ClipboardList, HelpCircle, BarChart2, BookX, Clock, ThumbsUp, Lightbulb } from 'lucide-react';
 
-        // ==========================================
-        //  CONFIGURACIÓN DEL SERVIDOR
-        // ==========================================
         const API_URL = "https://script.google.com/macros/s/AKfycbz0Y8CeApb9DHz4gPIUE85YxVqXDghcvksfl-yZN-N-Z7BmhAranatWQ4C2aRLe3LVY/exec"; 
-        
-        // ==========================================
-        //  CONFIGURACIÓN VISUAL
-        // ==========================================
         const LOGO_URL = "img/psicologia.png"; 
 
         // --- DATOS DE LA MALLA CURRICULAR ---
@@ -75,8 +75,107 @@
             { sem: "Talleres", id: 15, colorHeader: "bg-gray-800", colorText: "text-white", icon: "fa-screwdriver-wrench", subs: [ {c:"TALL-1",n:"Movimientos Indígenas", req: ["ANT-150"]}, {c:"TALL-2",n:"Territorios en Pueblos Ind.", req: ["ANT-150"]}, {c:"TALL-3",n:"Relac. Interétnicas", req: ["ANT-150"]}, {c:"TALL-4",n:"Identidad y Culturas", req: ["CSO-300"]}, {c:"TALL-5",n:"Soc. Infancia y Juv.", req: ["PSI-254"]}, {c:"TALL-6",n:"Soc. Org. y Trabajo", req: ["CSO-250"]}, {c:"TALL-7",n:"Sociología Migraciones", req: ["CSO-150"]}, {c:"TALL-8",n:"Delito y Sociedad", req: ["CSO-300"]}, {c:"TALL-9",n:"Clínica Psicoanalítica", req: ["PSI-353"]}, {c:"TALL-10",n:"Psicoanálisis Adolesc.", req: ["PSI-353"]}, {c:"TALL-11",n:"Psicosomática", req: ["BIO-250"]}, {c:"TALL-12",n:"Psicoanálisis de Niños", req: ["PSI-353"]}, {c:"TALL-13",n:"Salud Mental Comunitaria", req: ["PSI-354"]}, {c:"TALL-14",n:"Psic. Comunicación", req: ["PSI-400"]}, {c:"TALL-15",n:"Técnicas Conciliación", req: ["CSO-401"]}, {c:"TALL-16",n:"Terapia Rogeriana", req: ["PSI-400"]}, {c:"TALL-17",n:"Psicodrama", req: ["PSI-400"]}, {c:"TALL-18",n:"Psicología Positiva", req: ["PSI-400"]}, {c:"TALL-19",n:"Dificultades Aprendizaje", req: ["PSI-202"]}, {c:"TALL-20",n:"Psicofarmacología", req: ["PSI-400"]}, {c:"TALL-21",n:"Psicohigiene", req: ["PSI-400"]}, {c:"TALL-22",n:"Orientación Vocacional", req: ["PSI-402"]}, {c:"TALL-23",n:"Psic. Sexualidad", req: ["PSI-313"]}, {c:"TALL-24",n:"Psic. Organizacional", req: ["CSO-250"]}, {c:"TALL-25",n:"Educación Especial", req: ["PSI-402"]}, {c:"TALL-26",n:"Psicología Deporte", req: ["BIO-100"]}, {c:"TALL-27",n:"Sociología de la Salud", req: ["CSO-150"]}, {c:"TALL-28",n:"Género y Desarrollo", req: ["CSO-200"]}, {c:"TALL-29",n:"Teoría Conflicto Social", req: ["CSO-200"]}, {c:"TALL-30",n:"Ecología Social", req: ["CSO-201"]} ] }
         ];
 
+        // Crear una lista plana de todas las materias para los selectores
+        const allSubjectsList = curriculumData.flatMap(sem => sem.subs.map(s => ({ ...s, semestre: sem.sem })));
+        
+        // Helper function defined BEFORE usage
+        function subjectMapHasSem1(approvedSet) {
+             const sem1Codes = ["FIL-101", "EST-121", "CSO-101", "ANT-100", "PSI-101", "BIO-100", "DEP-112"];
+             return sem1Codes.every(code => approvedSet.has(code));
+        }
+
+        // Componente MultiSubjectSelect
+        const MultiSubjectSelect = ({ label, options, selected, onChange, placeholder = "Seleccionar materias..." }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [searchTerm, setSearchTerm] = useState("");
+
+            const filteredOptions = options.filter(opt => 
+                opt.n.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                opt.c.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            const handleToggle = (code) => {
+                if (selected.includes(code)) {
+                    onChange(selected.filter(c => c !== code));
+                } else {
+                    onChange([...selected, code]);
+                }
+            };
+
+            return (
+                <div className="relative mb-4">
+                    <label className="block text-sm font-bold text-slate-700 mb-1">{label}</label>
+                    <div 
+                        className="w-full border border-slate-300 rounded-lg p-3 cursor-pointer bg-white min-h-[46px]"
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
+                        {selected.length === 0 ? (
+                            <span className="text-gray-400">{placeholder}</span>
+                        ) : (
+                            <div className="flex flex-wrap gap-2">
+                                {selected.map(code => {
+                                    const subj = options.find(o => o.c === code);
+                                    return (
+                                        <span key={code} className="bg-blue-100 text-[#00008B] text-xs font-bold px-2 py-1 rounded flex items-center">
+                                            {subj ? subj.n : code}
+                                            <span 
+                                                className="ml-2 cursor-pointer hover:text-red-600 font-bold"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggle(code);
+                                                }}
+                                            >×</span>
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                    {isOpen && (
+                        <div className="absolute z-50 w-full bg-white border border-slate-300 mt-1 rounded-lg shadow-xl max-h-60 overflow-hidden flex flex-col">
+                            <input 
+                                type="text" 
+                                className="p-2 border-b outline-none bg-slate-50 text-sm" 
+                                placeholder="Buscar por nombre..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                autoFocus
+                            />
+                            <div className="overflow-y-auto custom-scrollbar flex-1">
+                                {filteredOptions.map(opt => (
+                                    <div 
+                                        key={opt.c} 
+                                        className={`p-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-sm ${selected.includes(opt.c) ? 'bg-blue-50 text-[#00008B] font-bold' : ''}`}
+                                        onClick={() => handleToggle(opt.c)}
+                                    >
+                                        <span>{opt.n} <span className="text-xs text-gray-500 block">{opt.semestre}</span></span>
+                                        {selected.includes(opt.c) && <CheckSquare size={16}/>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {isOpen && <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>}
+                </div>
+            );
+        };
+
         const subjectsMap = {};
         curriculumData.forEach(sem => sem.subs.forEach(sub => subjectsMap[sub.c] = sub));
+
+        // --- DEFINICIÓN DE PASOS DEL WIZARD ---
+        const STEPS = [
+            { id: 1, title: "Inicio", icon: Info },
+            { id: 2, title: "Identificación", icon: UserCheck },
+            { id: 3, title: "Académico", icon: GraduationCap },
+            { id: 4, title: "Situación Actual", icon: BarChart2 },
+            { id: 5, title: "Reprobadas", icon: BookX },
+            { id: 6, title: "Pendientes", icon: Clock },
+            { id: 7, title: "Adelantadas", icon: CheckCircle },
+            { id: 8, title: "Expectativas", icon: Lightbulb },
+            { id: 9, title: "Medidas", icon: ThumbsUp },
+            { id: 10, title: "Finalizar", icon: Send },
+        ];
 
         function App() {
             const [step, setStep] = useState(1);
@@ -89,15 +188,37 @@
             const [searchPin, setSearchPin] = useState('');
             const [validationError, setValidationError] = useState('');
             const [duplicateError, setDuplicateError] = useState(false);
+            const [consent, setConsent] = useState(false);
+            const [q15OtrosChecked, setQ15OtrosChecked] = useState(false);
+            const navRef = useRef(null);
+
             const [formData, setFormData] = useState({
+                // Datos Personales
                 nombre: '', codigoRegistro: '', telefono: '', email: '', semestre: '',
-                anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: ''
+                anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: '',
+                // Encuesta
+                q1_semestre_actual: '', q2_carga_materias: '', q3_trabaja: '', q4_horas_estudio: '', q5_avance: '',
+                q6_reprobadas: [], q7_razones_reprobacion: '',
+                q8_troncales_pendientes: [], q9_electivas_pendientes: [], q10_afectacion: '', q10_afectacion_detalle: '',
+                q11_troncales_adelantadas: [], q12_electivas_adelantadas: [],
+                q13_sentimiento: '', q14_aporte: '', q14_aporte_otro: '',
+                q15_medidas: [], q15_medidas_otro: '', q16_prioridad: '',
+                q17_propuesta: ''
             });
+
             const [approvedSubjects, setApprovedSubjects] = useState(new Set());
             const [originalCode, setOriginalCode] = useState(null);
-            
-            // NUEVO ESTADO: Consentimiento Informado
-            const [consent, setConsent] = useState(false);
+
+            // Auto-scroll del nav cuando cambia el paso
+            useEffect(() => {
+                if (navRef.current) {
+                    const activeStepEl = navRef.current.querySelector(`[data-step="${step}"]`);
+                    if (activeStepEl) {
+                        activeStepEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                }
+                window.scrollTo(0, 0);
+            }, [step]);
 
             useEffect(() => {
                 const approvedArray = Array.from(approvedSubjects);
@@ -141,12 +262,19 @@
             }, [formData.codigoRegistro, isEditing]);
 
             const handleChange = (e) => {
-                const { name, value } = e.target;
-                if (name === 'codigoRegistro' || name === 'pin' || name === 'telefono') {
+                const { name, value, type, checked } = e.target;
+                if (name === 'codigoRegistro' || name === 'pin' || name === 'telefono' || name === 'q2_carga_materias' || name === 'q4_horas_estudio') {
                     const val = value.replace(/\D/g, '');
                     if (name === 'pin') setFormData(prev => ({ ...prev, [name]: val.slice(0,4) }));
                     else if (name === 'codigoRegistro') setFormData(prev => ({ ...prev, [name]: val.slice(0,9) }));
                     else setFormData(prev => ({ ...prev, [name]: val }));
+                    return;
+                }
+                if (name === 'q15_medidas') {
+                    const current = formData.q15_medidas;
+                    if (value === 'Otros') setQ15OtrosChecked(checked);
+                    if (checked) setFormData(prev => ({ ...prev, q15_medidas: [...current, value] }));
+                    else setFormData(prev => ({ ...prev, q15_medidas: current.filter(item => item !== value) }));
                     return;
                 }
                 setFormData(prev => ({ ...prev, [name]: value }));
@@ -206,12 +334,24 @@
                             const aprobadasArr = String(result.asignaturasAprobadas || '').split(',').map(s => s.trim()).filter(s => s);
                             setApprovedSubjects(new Set(aprobadasArr));
                             setFormData({
-                                nombre: result.nombre, codigoRegistro: String(result.codigoRegistro),
-                                telefono: result.telefono || '', email: result.email || '',
+                                ...formData, ...result,
+                                nombre: result.nombre, 
+                                codigoRegistro: String(result.codigoRegistro),
+                                telefono: result.telefono || '', 
+                                email: result.email || '',
                                 semestre: result.semestre,
-                                anioIngreso: result.anioIngreso, asignaturasAprobadas: result.asignaturasAprobadas,
-                                ppa: result.ppa, pin: String(result.pin)
+                                anioIngreso: result.anioIngreso, 
+                                asignaturasAprobadas: result.asignaturasAprobadas,
+                                ppa: result.ppa, 
+                                pin: String(result.pin),
+                                q6_reprobadas: result.q6_reprobadas ? result.q6_reprobadas.split(', ') : [],
+                                q8_troncales_pendientes: result.q8_troncales_pendientes ? result.q8_troncales_pendientes.split(', ') : [],
+                                q9_electivas_pendientes: result.q9_electivas_pendientes ? result.q9_electivas_pendientes.split(', ') : [],
+                                q11_troncales_adelantadas: result.q11_troncales_adelantadas ? result.q11_troncales_adelantadas.split(', ') : [],
+                                q12_electivas_adelantadas: result.q12_electivas_adelantadas ? result.q12_electivas_adelantadas.split(', ') : [],
+                                q15_medidas: result.q15_medidas ? result.q15_medidas.split(', ') : []
                             });
+                            if (result.q15_medidas && result.q15_medidas.includes("Otros")) setQ15OtrosChecked(true);
                             setOriginalCode(String(result.codigoRegistro));
                             setIsEditing(true); setStatusMessage('Perfil cargado.'); setStatus('info');
                             setStep(2); 
@@ -230,23 +370,41 @@
                 if (validationError || duplicateError || formData.pin.length !== 4) {
                     setStatusMessage('Revisa los errores.'); setStatus('error'); return;
                 }
-                if (API_URL.includes("PEGAR_TU_URL")) { alert("Falta configurar la URL."); return; }
-
                 setLoading(true); setStatus('idle');
-                const datosEnviar = { ...formData, pin: `'${formData.pin}`, codigoRegistro: `'${formData.codigoRegistro}`, codigoOriginal: isEditing ? `'${originalCode}` : null };
+                const payload = { 
+                    ...formData, 
+                    pin: `'${formData.pin}`, 
+                    codigoRegistro: `'${formData.codigoRegistro}`, 
+                    codigoOriginal: isEditing ? `'${originalCode}` : null,
+                    q6_reprobadas: formData.q6_reprobadas.join(', '),
+                    q8_troncales_pendientes: formData.q8_troncales_pendientes.join(', '),
+                    q9_electivas_pendientes: formData.q9_electivas_pendientes.join(', '),
+                    q11_troncales_adelantadas: formData.q11_troncales_adelantadas.join(', '),
+                    q12_electivas_adelantadas: formData.q12_electivas_adelantadas.join(', '),
+                    q15_medidas: formData.q15_medidas.join(', ')
+                };
 
                 fetch(API_URL, {
                     method: 'POST', mode: 'no-cors',
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify(datosEnviar)
+                    body: JSON.stringify(payload)
                 })
-                .then(response => {
+                .then(() => {
                     setStatus('success'); setStatusMessage("Enviado correctamente.");
-                    setFormData({ nombre: '', codigoRegistro: '', telefono: '', email: '', semestre: '', anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: '' });
+                    setFormData({
+                        nombre: '', codigoRegistro: '', telefono: '', email: '', semestre: '',
+                        anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: '',
+                        q1_semestre_actual: '', q2_carga_materias: '', q3_trabaja: '', q4_horas_estudio: '', q5_avance: '',
+                        q6_reprobadas: [], q7_razones_reprobacion: '',
+                        q8_troncales_pendientes: [], q9_electivas_pendientes: [], q10_afectacion: '', q10_afectacion_detalle: '',
+                        q11_troncales_adelantadas: [], q12_electivas_adelantadas: [],
+                        q13_sentimiento: '', q14_aporte: '', q14_aporte_otro: '',
+                        q15_medidas: [], q15_medidas_otro: '', q16_prioridad: '',
+                        q17_propuesta: ''
+                    });
                     setApprovedSubjects(new Set());
                     setOriginalCode(null); setSearchCode(''); setSearchPin(''); setIsEditing(false); setLoading(false);
-                    setStep(1); 
-                    setConsent(false); // Reset consent
+                    setStep(1); setConsent(false); setQ15OtrosChecked(false);
                 })
                 .catch(err => {
                     console.error(err);
@@ -254,36 +412,64 @@
                 });
             };
 
-            const canProceedToStep3 = () => {
-                return formData.nombre && formData.codigoRegistro.length === 9 && 
-                       formData.telefono && formData.email && formData.pin.length === 4 &&
-                       String(formData.anioIngreso).length === 4 && 
-                       formData.ppa && !validationError && !duplicateError;
-            };
+            const canProceedToStep3 = () => formData.nombre && formData.codigoRegistro.length === 9 && formData.telefono && formData.email && formData.pin.length === 4 && String(formData.anioIngreso).length === 4 && formData.ppa && !validationError && !duplicateError;
+            
+            // Función genérica para renderizar cada paso
+            const renderSurveyStep = (title, content) => (
+                <div className="max-w-4xl mx-auto fade-in pb-24">
+                    <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden mb-6">
+                        <div className="bg-slate-50 px-8 py-6 border-b border-slate-200 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <MessageSquare className="text-[#00008B] w-8 h-8" />
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-800">Encuesta de Transición</h2>
+                                    <p className="text-sm text-slate-500">Sección: {title}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-8 space-y-6">{content}</div>
+                    </div>
+                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center z-50">
+                        <button onClick={() => setStep(step - 1)} className="text-slate-500 font-bold hover:text-slate-800 flex items-center gap-2 px-4"><ArrowLeft size={18}/> Atrás</button>
+                        {step === 10 ? (
+                            <button onClick={handleSubmit} disabled={loading} className={`px-8 py-3 rounded-full font-bold text-white shadow-lg flex items-center gap-2 ${loading ? 'bg-slate-500' : 'bg-[#00008B] hover:bg-blue-900'}`}>{loading ? 'Enviando...' : 'Finalizar Todo'} <Send size={18}/></button>
+                        ) : (
+                            <button onClick={() => setStep(step + 1)} className="bg-[#00008B] text-white font-bold py-2 px-8 rounded-lg shadow-md flex items-center gap-2 hover:bg-blue-900">Siguiente <ArrowRight size={18}/></button>
+                        )}
+                    </div>
+                </div>
+            );
 
             return (
                 <div className="min-h-screen pb-20">
                     <div className="bg-[#8B0000] text-white shadow-lg border-b-4 border-[#00008B] sticky top-0 z-50">
-                        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="p-2 bg-white rounded-full shadow-md text-[#8B0000]">
-                                    {LOGO_URL !== "PEGAR_URL_LOGO_AQUI" ? <img src={LOGO_URL} alt="Logo" className="w-16 h-16 object-contain" /> : <i className="fa-solid fa-university text-2xl"></i>}
+                        <div className="max-w-7xl mx-auto px-4 py-2">
+                            <div className="flex items-center gap-4 mb-2">
+                                <div className="p-1 bg-white rounded-full shadow-md text-[#8B0000]">
+                                    {LOGO_URL !== "PEGAR_URL_LOGO_AQUI" ? <img src={LOGO_URL} alt="Logo" className="w-10 h-10 object-contain" /> : <i className="fa-solid fa-university text-2xl"></i>}
                                 </div>
                                 <div>
-                                    <h1 className="text-xl sm:text-2xl font-bold font-serif tracking-tight">Carrera de Psicología</h1>
-                                    <p className="text-red-100 text-xs sm:text-sm">Sistema de Control Académico</p>
+                                    <h1 className="text-lg font-bold font-serif tracking-tight leading-tight">Carrera de Psicología</h1>
+                                    <p className="text-red-100 text-[10px] sm:text-xs">Sistema de Control Académico</p>
                                 </div>
                             </div>
-                            <div className="hidden md:flex gap-2">
-                                <div className={`px-4 py-1 rounded-full text-xs font-bold ${step===1 ? 'bg-white text-[#8B0000]' : 'bg-[#700000] text-red-300'}`}>1. Inicio</div>
-                                <div className={`px-4 py-1 rounded-full text-xs font-bold ${step===2 ? 'bg-white text-[#8B0000]' : 'bg-[#700000] text-red-300'}`}>2. Identificación</div>
-                                <div className={`px-4 py-1 rounded-full text-xs font-bold ${step===3 ? 'bg-white text-[#8B0000]' : 'bg-[#700000] text-red-300'}`}>3. Académico</div>
+                            {/* Navegación Horizontal con Scroll */}
+                            <div ref={navRef} className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                                {STEPS.map((s) => (
+                                    <div 
+                                        key={s.id}
+                                        data-step={s.id}
+                                        className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1 ${step === s.id ? 'bg-white text-[#8B0000]' : step > s.id ? 'bg-[#5a0000] text-red-200' : 'bg-[#700000] text-red-300'}`}
+                                    >
+                                        <s.icon size={12} /> {s.id}. {s.title}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
 
                     <div className="max-w-7xl mx-auto px-4 py-8">
-                        {/* --- PASO 1: INTRODUCCIÓN Y BÚSQUEDA --- */}
+                        {/* PASO 1: INICIO */}
                         {step === 1 && (
                             <div className="space-y-8 fade-in">
                                 <div className="bg-white border-t-4 border-[#00008B] p-8 rounded-lg shadow-md">
@@ -296,70 +482,26 @@
                                                 <h2 className="text-2xl font-bold text-[#00008B] mb-2 font-serif">Simulación de Transición - Plan 148-2</h2>
                                                 <p className="text-base text-slate-600">Estimado(a) estudiante: La Carrera de Psicología se encuentra en la fase de ensayo logístico para la implementación del nuevo Plan de Estudios.</p>
                                             </div>
-
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
                                                     <h3 className="font-bold text-[#00008B] mb-3 flex items-center gap-2 text-lg"><Target size={20}/> Objetivo</h3>
-                                                    <p className="text-justify text-slate-600">El presente cuestionario tiene como objetivo realizar una simulación de la transición para evaluar cómo el nuevo Plan podría influir en su trayectoria formativa. Su participación es esencial para definir y validar futuras reglas de migración, homologación y compensación.</p>
+                                                    <p className="text-justify text-slate-600">Conocer tu situación actual, tus percepciones sobre el proceso de transición curricular y tus preferencias para las medidas de adaptación.</p>
                                                 </div>
                                                 <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
                                                     <h3 className="font-bold text-[#00008B] mb-3 flex items-center gap-2 text-lg"><ListChecks size={20}/> Consigna</h3>
-                                                    <p className="text-justify text-slate-600">Le solicitamos responder de manera <strong>sincera y completa</strong>. Sus respuestas serán tratadas con estricta confidencialidad y utilizadas únicamente con fines de análisis académico e institucional.</p>
+                                                    <p className="text-justify text-slate-600">Le solicitamos responder de manera <strong>sincera y completa</strong>. Sus respuestas serán tratadas con estricta confidencialidad.</p>
                                                 </div>
                                             </div>
-
-                                            <div>
-                                                <h3 className="font-bold text-slate-800 mb-4 border-b pb-2 flex items-center gap-2 text-base"><Layout size={18}/> Dimensiones del Registro</h3>
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                    <div className="flex flex-col items-center p-4 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                                                        <div className="w-8 h-8 bg-[#00008B] text-white rounded-full flex items-center justify-center font-bold mb-2">1</div>
-                                                        <span className="font-medium text-slate-700">Identificación</span>
-                                                        <span className="text-xs text-slate-500 mt-1">Datos Personales y Acceso</span>
-                                                    </div>
-                                                    <div className="flex flex-col items-center p-4 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                                                        <div className="w-8 h-8 bg-[#00008B] text-white rounded-full flex items-center justify-center font-bold mb-2">2</div>
-                                                        <span className="font-medium text-slate-700">Historial</span>
-                                                        <span className="text-xs text-slate-500 mt-1">Año Ingreso y PPA</span>
-                                                    </div>
-                                                    <div className="flex flex-col items-center p-4 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                                                        <div className="w-8 h-8 bg-[#00008B] text-white rounded-full flex items-center justify-center font-bold mb-2">3</div>
-                                                        <span className="font-medium text-slate-700">Avance</span>
-                                                        <span className="text-xs text-slate-500 mt-1">Malla Curricular Detallada</span>
-                                                    </div>
-                                                </div>
+                                            <div className="mt-8 border-t pt-6 flex flex-col items-center gap-4">
+                                                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all">
+                                                    <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="w-5 h-5 accent-[#00008B] cursor-pointer" />
+                                                    <span className="text-slate-700 font-medium select-none">He leído la consigna y acepto participar voluntariamente.</span>
+                                                </label>
+                                                <button onClick={() => setStep(2)} disabled={!consent} className={`font-bold py-3 px-10 rounded-full shadow-lg flex items-center gap-3 transition-all text-lg ${consent ? 'bg-[#00008B] hover:bg-blue-900 text-white transform hover:scale-105 active:scale-95' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}>Comenzar Registro <ArrowRight size={20}/></button>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    {/* CONSENTIMIENTO */}
-                                    <div className="mt-8 border-t pt-6 flex flex-col items-center gap-4">
-                                        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={consent} 
-                                                onChange={(e) => setConsent(e.target.checked)}
-                                                className="w-5 h-5 accent-[#00008B] cursor-pointer"
-                                            />
-                                            <span className="text-slate-700 font-medium select-none">
-                                                He leído la consigna y acepto participar voluntariamente en esta simulación.
-                                            </span>
-                                        </label>
-
-                                        <button 
-                                            onClick={() => setStep(2)} 
-                                            disabled={!consent}
-                                            className={`
-                                                font-bold py-3 px-10 rounded-full shadow-lg flex items-center gap-3 transition-all text-lg
-                                                ${consent 
-                                                    ? 'bg-[#00008B] hover:bg-blue-900 text-white transform hover:scale-105 active:scale-95' 
-                                                    : 'bg-slate-300 text-slate-500 cursor-not-allowed'}
-                                            `}
-                                        >
-                                            Comenzar Registro <ArrowRight size={20}/>
-                                        </button>
-                                    </div>
                                 </div>
-
                                 <div className="text-center">
                                     <p className="text-sm text-slate-500 mb-4">¿Ya te registraste y necesitas corregir algo?</p>
                                     <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm border border-slate-200 p-4">
@@ -374,7 +516,7 @@
                             </div>
                         )}
 
-                        {/* PASO 2: DATOS PERSONALES */}
+                        {/* PASO 2: IDENTIFICACIÓN */}
                         {step === 2 && (
                             <div className="max-w-4xl mx-auto fade-in">
                                 <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
@@ -383,14 +525,13 @@
                                             <UserCheck className="text-[#00008B] w-8 h-8" />
                                             <div>
                                                 <h2 className="text-xl font-bold text-slate-800">Identificación del Estudiante</h2>
-                                                <p className="text-sm text-slate-500">Paso 2 de 3</p>
+                                                <p className="text-sm text-slate-500">Paso 2 de 10</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             {isEditing && <span className="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full border border-orange-200">Modo Edición</span>}
                                         </div>
                                     </div>
-                                    
                                     <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="space-y-4">
                                             <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider border-b pb-1">Datos Básicos</h3>
@@ -401,14 +542,10 @@
                                                 {duplicateError && <span className="text-red-600 text-xs font-bold mt-1 block">⚠️ Este código ya está registrado.</span>}
                                             </div>
                                             <div>
-                                                <label className="text-sm font-bold text-slate-700 flex items-center justify-between">
-                                                    PIN de Seguridad (4 dígitos)
-                                                    <span className="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Crucial para editar luego</span>
-                                                </label>
+                                                <label className="text-sm font-bold text-slate-700 flex items-center justify-between">PIN de Seguridad (4 dígitos)</label>
                                                 <input required name="pin" value={formData.pin} onChange={handleChange} disabled={isEditing} className={`w-full mt-1 p-3 border rounded-lg text-center tracking-[0.5em] font-mono font-bold text-lg ${isEditing ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'border-slate-300 focus:ring-2 focus:ring-[#00008B] outline-none'}`} placeholder="0000" />
                                             </div>
                                         </div>
-
                                         <div className="space-y-4">
                                             <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider border-b pb-1">Contacto y Académico</h3>
                                             <div className="grid grid-cols-2 gap-4">
@@ -416,9 +553,7 @@
                                                 <div><label className="text-sm font-bold text-slate-700">Año Ingreso</label><input required type="number" name="anioIngreso" value={formData.anioIngreso} onChange={handleChange} className={`w-full mt-1 p-3 border rounded-lg outline-none ${validationError ? 'border-red-500 bg-red-50' : 'border-slate-300'}`} placeholder="Ej. 2021" /></div>
                                             </div>
                                             {validationError && <p className="text-xs text-red-600 font-bold -mt-2">{validationError}</p>}
-                                            
                                             <div><label className="text-sm font-bold text-slate-700">Correo Electrónico</label><input required type="email" name="email" value={formData.email} onChange={handleChange} className="w-full mt-1 p-3 border border-slate-300 rounded-lg outline-none" placeholder="correo@ejemplo.com" /></div>
-                                            
                                             <div>
                                                 <label className="text-sm font-bold text-slate-700">Promedio Ponderado (PPA)</label>
                                                 <div className="flex flex-wrap gap-2 mt-2">
@@ -431,21 +566,15 @@
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="bg-slate-50 px-8 py-4 border-t border-slate-200 flex justify-between">
-                                        <button onClick={() => setStep(1)} className="text-slate-500 font-bold hover:text-slate-700 flex items-center gap-2"><ArrowLeft size={18}/> Volver</button>
-                                        <button 
-                                            onClick={() => canProceedToStep3() ? setStep(3) : alert("Por favor completa todos los campos correctamente.")}
-                                            className={`bg-[#00008B] text-white font-bold py-2 px-8 rounded-lg shadow-md flex items-center gap-2 ${!canProceedToStep3() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-900'}`}
-                                        >
-                                            Siguiente: Malla Curricular <ArrowRight size={18}/>
-                                        </button>
+                                        <button onClick={() => setStep(1)} className="text-slate-500 font-bold hover:text-slate-700 flex items-center gap-2"><ArrowLeft size={18}/> Atrás</button>
+                                        <button onClick={() => canProceedToStep3() ? setStep(3) : alert("Completa todos los campos.")} className={`bg-[#00008B] text-white font-bold py-2 px-8 rounded-lg shadow-md flex items-center gap-2 ${!canProceedToStep3() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-900'}`}>Siguiente <ArrowRight size={18}/></button>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* PASO 3: MALLA CURRICULAR */}
+                        {/* PASO 3: ACADÉMICO (MALLA) */}
                         {step === 3 && (
                             <div className="fade-in space-y-8">
                                 <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 border-[#00008B]">
@@ -458,7 +587,6 @@
                                         <p className="text-2xl font-bold text-[#00008B]">{approvedSubjects.size} <span className="text-sm font-normal text-slate-500">materias</span></p>
                                     </div>
                                 </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                     {curriculumData.map((sem, idx) => {
                                         const locked = isSpecialtyBlocked(sem.group);
@@ -471,17 +599,13 @@
                                                 <div className="p-4 space-y-2">
                                                     {sem.subs.map(sub => {
                                                         const isChecked = approvedSubjects.has(sub.c);
-                                                        
-                                                        // Mensaje informativo (NO bloqueante)
                                                         const isElective = sem.id === 14;
                                                         let infoMsg = "";
-                                                        if (isElective && !subjectMapHasSem1(approvedSubjects)) {
-                                                            infoMsg = "Sugerencia: Aprobar materias de 1er semestre primero";
-                                                        } else if (sub.req.length > 0 && !isUnlocked(sub)) {
+                                                        if (isElective && !subjectMapHasSem1(approvedSubjects)) infoMsg = "Sugerencia: Aprobar 1er semestre primero";
+                                                        else if (sub.req.length > 0 && !isUnlocked(sub)) {
                                                             const missing = sub.req.filter(r => !approvedSubjects.has(r)).map(r => subjectsMap[r]?.n || r).join(', ');
                                                             if(missing) infoMsg = `Requisito sugerido: ${missing}`;
                                                         }
-
                                                         return (
                                                             <label key={sub.c} title={infoMsg} className={`flex items-start gap-3 p-2 rounded border cursor-pointer transition-all ${isChecked ? 'bg-blue-50 border-blue-200 shadow-sm' : 'hover:bg-slate-50 border-transparent hover:border-slate-200'}`}>
                                                                 <input type="checkbox" className="mt-1 accent-[#00008B] w-4 h-4" checked={isChecked} disabled={locked} onChange={() => toggleSubject(sub.c)} />
@@ -497,28 +621,210 @@
                                         )
                                     })}
                                 </div>
-
                                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center z-50">
-                                    <button onClick={() => setStep(2)} className="text-slate-500 font-bold hover:text-slate-800 flex items-center gap-2 px-4"><ArrowLeft size={18}/> Volver</button>
-                                    <button 
-                                        onClick={handleSubmit} 
-                                        disabled={loading}
-                                        className={`px-8 py-3 rounded-full font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2 ${loading ? 'bg-slate-500 cursor-not-allowed' : isEditing ? 'bg-orange-600 hover:bg-orange-700' : 'bg-[#00008B] hover:bg-blue-900'}`}
-                                    >
-                                        {loading ? 'Procesando...' : isEditing ? <><Edit3 size={18}/> Actualizar Registro</> : <><Send size={18}/> Finalizar y Enviar</>}
-                                    </button>
+                                    <button onClick={() => setStep(2)} className="text-slate-500 font-bold hover:text-slate-800 flex items-center gap-2 px-4"><ArrowLeft size={18}/> Atrás</button>
+                                    <button onClick={() => setStep(4)} className="bg-[#00008B] text-white font-bold py-2 px-8 rounded-lg shadow-md flex items-center gap-2 hover:bg-blue-900">Siguiente <ArrowRight size={18}/></button>
                                 </div>
                                 <div className="h-20"></div>
                             </div>
                         )}
+
+                        {/* PASO 4: SITUACIÓN ACTUAL */}
+                        {step === 4 && renderSurveyStep("I. Datos Generales / Situación Actual", (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">1. Semestre que cursas actualmente</label>
+                                    <select name="q1_semestre_actual" value={formData.q1_semestre_actual} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white">
+                                        <option value="">Selecciona...</option>
+                                        {[1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n}º Semestre</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">2. Carga académica (Nº materias inscritas)</label>
+                                    <input type="number" name="q2_carga_materias" value={formData.q2_carga_materias} onChange={handleChange} className="w-full p-2 border rounded-lg" placeholder="0" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">3. ¿Trabajas mientras estudias?</label>
+                                    <div className="flex gap-4">
+                                        <label className="flex items-center gap-2"><input type="radio" name="q3_trabaja" value="Sí" checked={formData.q3_trabaja === "Sí"} onChange={handleChange} /> Sí</label>
+                                        <label className="flex items-center gap-2"><input type="radio" name="q3_trabaja" value="No" checked={formData.q3_trabaja === "No"} onChange={handleChange} /> No</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">4. Horas diarias dedicadas al estudio</label>
+                                    <input type="number" name="q4_horas_estudio" value={formData.q4_horas_estudio} onChange={handleChange} className="w-full p-2 border rounded-lg" placeholder="0" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">5. Estado general de avance académico</label>
+                                    <select name="q5_avance" value={formData.q5_avance} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white">
+                                        <option value="">Selecciona...</option>
+                                        {['Voy al día', 'Ligeramente atrasado(a)', 'Atraso moderado', 'Atraso significativo'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* PASO 5: REPROBADAS */}
+                        {step === 5 && renderSurveyStep("II. Materias Reprobadas", (
+                            <div className="space-y-4">
+                                <MultiSubjectSelect 
+                                    label="6. Indica las materias reprobadas"
+                                    options={allSubjectsList}
+                                    selected={formData.q6_reprobadas}
+                                    onChange={(val) => setFormData(prev => ({...prev, q6_reprobadas: val}))}
+                                />
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">7. Razones principales de reprobación</label>
+                                    <textarea name="q7_razones_reprobacion" value={formData.q7_razones_reprobacion} onChange={handleChange} className="w-full p-2 border rounded-lg h-24" placeholder="Carga laboral, falta de comprensión, etc..."></textarea>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* PASO 6: PENDIENTES */}
+                        {step === 6 && renderSurveyStep("III. Materias Atrasadas", (
+                            <div className="space-y-4">
+                                <MultiSubjectSelect 
+                                    label="8. Materias troncales pendientes"
+                                    options={allSubjectsList.filter(s => s.id !== 14)} 
+                                    selected={formData.q8_troncales_pendientes}
+                                    onChange={(val) => setFormData(prev => ({...prev, q8_troncales_pendientes: val}))}
+                                />
+                                <MultiSubjectSelect 
+                                    label="9. Materias electivas pendientes"
+                                    options={allSubjectsList.filter(s => s.c.startsWith("ELEC") || s.c.startsWith("COMP") || s.c.startsWith("LENG") || s.c.startsWith("ING"))} 
+                                    selected={formData.q9_electivas_pendientes}
+                                    onChange={(val) => setFormData(prev => ({...prev, q9_electivas_pendientes: val}))}
+                                />
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">10. ¿Estas materias afectan tu avance?</label>
+                                    <div className="flex gap-4 flex-wrap">
+                                        {['Sí', 'No', 'No sé', 'Depende'].map(opt => (
+                                            <label key={opt} className="flex items-center gap-2">
+                                                <input type="radio" name="q10_afectacion" value={opt} checked={formData.q10_afectacion === opt} onChange={handleChange} /> {opt}
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {formData.q10_afectacion === 'Depende' && (
+                                        <input type="text" name="q10_afectacion_detalle" value={formData.q10_afectacion_detalle} onChange={handleChange} className="w-full mt-2 p-2 border rounded-lg" placeholder="Explica..." />
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* PASO 7: ADELANTADAS */}
+                        {step === 7 && renderSurveyStep("IV. Materias Adelantadas", (
+                            <div className="space-y-4">
+                                <MultiSubjectSelect 
+                                    label="11. Materias troncales adelantadas"
+                                    options={allSubjectsList.filter(s => s.id !== 14)} 
+                                    selected={formData.q11_troncales_adelantadas}
+                                    onChange={(val) => setFormData(prev => ({...prev, q11_troncales_adelantadas: val}))}
+                                />
+                                <MultiSubjectSelect 
+                                    label="12. Materias electivas adelantadas"
+                                    options={allSubjectsList.filter(s => s.c.startsWith("ELEC") || s.c.startsWith("COMP") || s.c.startsWith("LENG") || s.c.startsWith("ING"))} 
+                                    selected={formData.q12_electivas_adelantadas}
+                                    onChange={(val) => setFormData(prev => ({...prev, q12_electivas_adelantadas: val}))}
+                                />
+                            </div>
+                        ))}
+
+                        {/* PASO 8: EXPECTATIVAS */}
+                        {step === 8 && renderSurveyStep("V. Expectativas", (
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">13. ¿Cómo te sientes respecto a la implementación?</label>
+                                    <div className="space-y-2">
+                                        {[
+                                            "Motivado(a): lo veo como una oportunidad",
+                                            "Cauteloso(a): prefiero observar",
+                                            "Preocupado(a): temo que afecte mi avance",
+                                            "Indiferente: no creo que cambie mucho",
+                                            "Confundido(a): aún no comprendo bien"
+                                        ].map(opt => (
+                                            <label key={opt} className="flex items-center gap-2">
+                                                <input type="radio" name="q13_sentimiento" value={opt} checked={formData.q13_sentimiento === opt} onChange={handleChange} />
+                                                <span className="text-sm">{opt}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">14. ¿Qué crees que aportará el nuevo currículo?</label>
+                                    <div className="space-y-2">
+                                        {[
+                                            "Mejor organización del avance académico",
+                                            "Secuencias más claras y lógicas de contenido",
+                                            "Mayor flexibilidad",
+                                            "Claridad en perfiles y competencias",
+                                            "Ninguna de las anteriores",
+                                            "Otra opinión"
+                                        ].map(opt => (
+                                            <div key={opt}>
+                                                <label className="flex items-center gap-2">
+                                                    <input type="radio" name="q14_aporte" value={opt} checked={formData.q14_aporte === opt} onChange={handleChange} />
+                                                    <span className="text-sm">{opt}</span>
+                                                </label>
+                                                {opt === "Otra opinión" && formData.q14_aporte === "Otra opinión" && (
+                                                    <input type="text" name="q14_aporte_otro" value={formData.q14_aporte_otro} onChange={handleChange} className="w-full mt-1 ml-6 p-2 border rounded-lg text-sm" placeholder="Escribe tu opinión..." />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* PASO 9: MEDIDAS */}
+                        {step === 9 && renderSurveyStep("VI. Medidas de Transición", (
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">15. Medidas útiles para tu avance (Selección Múltiple)</label>
+                                    <div className="space-y-2">
+                                        {[
+                                            "Cursos de verano intensivos",
+                                            "Semestres de igualación sin prerequisitos",
+                                            "Cursos especiales de nivelación en el semestre",
+                                            "Tutorías académicas personalizadas",
+                                            "Adaptación flexible de prerequisitos por única vez",
+                                            "Otros"
+                                        ].map(opt => (
+                                            <div key={opt}>
+                                                <label className="flex items-center gap-2">
+                                                    <input type="checkbox" name="q15_medidas" value={opt} checked={formData.q15_medidas.includes(opt)} onChange={handleChange} />
+                                                    <span className="text-sm">{opt}</span>
+                                                </label>
+                                                {opt === "Otros" && q15OtrosChecked && (
+                                                    <input type="text" name="q15_medidas_otro" value={formData.q15_medidas_otro} onChange={handleChange} className="w-full mt-1 ml-6 p-2 border rounded-lg text-sm" placeholder="Especifica..." />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                {formData.q15_medidas.length > 0 && (
+                                    <div className="fade-in">
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">16. Prioridad absoluta (Elige una de las seleccionadas arriba)</label>
+                                        <select name="q16_prioridad" value={formData.q16_prioridad} onChange={handleChange} className="w-full p-2 border rounded-lg bg-white">
+                                            <option value="">Selecciona tu prioridad...</option>
+                                            {formData.q15_medidas.map(opt => (
+                                                <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {/* PASO 10: COMENTARIOS Y FINAL */}
+                        {step === 10 && renderSurveyStep("VII. Comentarios Finales", (
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">17. Propuesta para mejorar la transición</label>
+                                <textarea name="q17_propuesta" value={formData.q17_propuesta} onChange={handleChange} className="w-full p-2 border rounded-lg h-32" placeholder="Escribe tu propuesta..."></textarea>
+                            </div>
+                        ))}
                     </div>
                 </div>
             );
-        }
-
-        function subjectMapHasSem1(approvedSet) {
-             const sem1Codes = ["FIL-101", "EST-121", "CSO-101", "ANT-100", "PSI-101", "BIO-100", "DEP-112"];
-             return sem1Codes.every(code => approvedSet.has(code));
         }
 
         const root = createRoot(document.getElementById('root'));
