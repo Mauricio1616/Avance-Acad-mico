@@ -22,12 +22,10 @@
         .specialty-locked { filter: grayscale(100%); opacity: 0.4; pointer-events: none; border: 2px dashed #9ca3af; }
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* Custom Scrollbar for dropdowns */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
-        /* Hide scrollbar for step navigation on mobile */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -38,7 +36,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { User, Send, CheckCircle, AlertCircle, Calendar, Layers, Award, Search, Edit3, Lock, AlertTriangle, KeyRound, BookOpen, Info, Target, ListChecks, Layout, Phone, Mail, ArrowRight, ArrowLeft, FileText, UserCheck, GraduationCap, CheckSquare, MessageSquare, ClipboardList, HelpCircle, BarChart2, BookX, Clock, ThumbsUp, Lightbulb } from 'lucide-react';
+        import { User, Send, CheckCircle, AlertCircle, Calendar, Layers, Award, Search, Edit3, Lock, AlertTriangle, KeyRound, BookOpen, Info, Target, ListChecks, Layout, Phone, Mail, ArrowRight, ArrowLeft, FileText, UserCheck, GraduationCap, CheckSquare, MessageSquare, ClipboardList, HelpCircle, BarChart2, BookX, Clock, ThumbsUp, Lightbulb, Shield } from 'lucide-react';
 
         const API_URL = "https://script.google.com/macros/s/AKfycbz0Y8CeApb9DHz4gPIUE85YxVqXDghcvksfl-yZN-N-Z7BmhAranatWQ4C2aRLe3LVY/exec"; 
         const LOGO_URL = "img/psicologia.png"; 
@@ -185,17 +183,23 @@
             const [statusMessage, setStatusMessage] = useState('');
             const [isEditing, setIsEditing] = useState(false);
             const [searchCode, setSearchCode] = useState('');
-            const [searchPin, setSearchPin] = useState('');
+            // REMOVED PIN STATE
             const [validationError, setValidationError] = useState('');
             const [duplicateError, setDuplicateError] = useState(false);
             const [consent, setConsent] = useState(false);
             const [q15OtrosChecked, setQ15OtrosChecked] = useState(false);
             const navRef = useRef(null);
 
+            // ADMIN STATE
+            const [showAdminLogin, setShowAdminLogin] = useState(false);
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [adminEmail, setAdminEmail] = useState("");
+            const [adminPass, setAdminPass] = useState("");
+
             const [formData, setFormData] = useState({
-                // Datos Personales
+                // Datos Personales - NO PIN
                 nombre: '', codigoRegistro: '', telefono: '', email: '', semestre: '',
-                anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: '',
+                anioIngreso: '', asignaturasAprobadas: '', ppa: '',
                 // Encuesta
                 q1_semestre_actual: '', q2_carga_materias: '', q3_trabaja: '', q4_horas_estudio: '', q5_avance: '',
                 q6_reprobadas: [], q7_razones_reprobacion: '',
@@ -234,6 +238,7 @@
                 setFormData(prev => ({ ...prev, semestre: currentSem, asignaturasAprobadas: approvedArray.join(', ') }));
             }, [approvedSubjects]);
 
+            // Validación Codigo vs Año
             useEffect(() => {
                 const { codigoRegistro, anioIngreso } = formData;
                 if (codigoRegistro.length >= 3 && anioIngreso) {
@@ -252,21 +257,21 @@
                 }
             }, [formData.codigoRegistro, formData.anioIngreso]);
 
+            // Validación duplicado (Solo si NO es admin, los admins pueden buscar cualquiera)
             useEffect(() => {
-                if (formData.codigoRegistro.length === 9 && !isEditing) {
+                if (formData.codigoRegistro.length === 9 && !isEditing && !isAdmin) {
                     fetch(`${API_URL}?action=exists&code=${formData.codigoRegistro}`)
                         .then(res => res.json())
                         .then(existe => setDuplicateError(existe))
                         .catch(err => console.error("Error API", err));
                 } else setDuplicateError(false);
-            }, [formData.codigoRegistro, isEditing]);
+            }, [formData.codigoRegistro, isEditing, isAdmin]);
 
             const handleChange = (e) => {
                 const { name, value, type, checked } = e.target;
-                if (name === 'codigoRegistro' || name === 'pin' || name === 'telefono' || name === 'q2_carga_materias' || name === 'q4_horas_estudio') {
+                if (name === 'codigoRegistro' || name === 'telefono' || name === 'q2_carga_materias' || name === 'q4_horas_estudio') {
                     const val = value.replace(/\D/g, '');
-                    if (name === 'pin') setFormData(prev => ({ ...prev, [name]: val.slice(0,4) }));
-                    else if (name === 'codigoRegistro') setFormData(prev => ({ ...prev, [name]: val.slice(0,9) }));
+                    if (name === 'codigoRegistro') setFormData(prev => ({ ...prev, [name]: val.slice(0,9) }));
                     else setFormData(prev => ({ ...prev, [name]: val }));
                     return;
                 }
@@ -321,12 +326,38 @@
                 setApprovedSubjects(newSet);
             };
 
+            // --- ADMIN LOGIN LOGIC ---
+            const handleAdminLogin = async (e) => {
+                e.preventDefault();
+                setSearching(true);
+                setStatusMessage('');
+                try {
+                    const response = await fetch(`${API_URL}?action=adminLogin&email=${adminEmail}&pass=${adminPass}`);
+                    const result = await response.json();
+                    if (result.success) {
+                        setIsAdmin(true);
+                        setShowAdminLogin(false);
+                    } else {
+                        alert("Credenciales incorrectas");
+                    }
+                } catch (error) {
+                    alert("Error de conexión");
+                } finally {
+                    setSearching(false);
+                }
+            };
+
             const handleSearch = (e) => {
                 e.preventDefault();
-                if(!searchCode || !searchPin) { setStatusMessage('Faltan datos.'); setStatus('error'); return; }
+                // ONLY ADMIN SEARCH NOW
+                if(!isAdmin) return; 
+                
+                if(!searchCode) { setStatusMessage('Ingresa el código.'); setStatus('error'); return; }
+                
                 setSearching(true); setStatus('idle');
 
-                fetch(`${API_URL}?action=search&code=${searchCode}&pin=${searchPin}`)
+                const action = 'adminSearch'; // Always adminSearch here
+                fetch(`${API_URL}?action=${action}&code=${searchCode}`)
                     .then(res => res.json())
                     .then(result => {
                         setSearching(false);
@@ -343,7 +374,7 @@
                                 anioIngreso: result.anioIngreso, 
                                 asignaturasAprobadas: result.asignaturasAprobadas,
                                 ppa: result.ppa, 
-                                pin: String(result.pin),
+                                // Pin not returned
                                 q6_reprobadas: result.q6_reprobadas ? result.q6_reprobadas.split(', ') : [],
                                 q8_troncales_pendientes: result.q8_troncales_pendientes ? result.q8_troncales_pendientes.split(', ') : [],
                                 q9_electivas_pendientes: result.q9_electivas_pendientes ? result.q9_electivas_pendientes.split(', ') : [],
@@ -364,16 +395,17 @@
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                if (String(formData.anioIngreso).length !== 4) {
+                // Admin can skip validations if needed, but safer to keep basic ones
+                if (!isAdmin && String(formData.anioIngreso).length !== 4) {
                     setStatusMessage('El Año de Ingreso debe tener 4 dígitos.'); setStatus('error'); return;
                 }
-                if (validationError || duplicateError || formData.pin.length !== 4) {
+                if (!isAdmin && (validationError || duplicateError)) {
                     setStatusMessage('Revisa los errores.'); setStatus('error'); return;
                 }
                 setLoading(true); setStatus('idle');
                 const payload = { 
                     ...formData, 
-                    pin: `'${formData.pin}`, 
+                    // NO PIN
                     codigoRegistro: `'${formData.codigoRegistro}`, 
                     codigoOriginal: isEditing ? `'${originalCode}` : null,
                     q6_reprobadas: formData.q6_reprobadas.join(', '),
@@ -393,7 +425,7 @@
                     setStatus('success'); setStatusMessage("Enviado correctamente.");
                     setFormData({
                         nombre: '', codigoRegistro: '', telefono: '', email: '', semestre: '',
-                        anioIngreso: '', asignaturasAprobadas: '', ppa: '', pin: '',
+                        anioIngreso: '', asignaturasAprobadas: '', ppa: '',
                         q1_semestre_actual: '', q2_carga_materias: '', q3_trabaja: '', q4_horas_estudio: '', q5_avance: '',
                         q6_reprobadas: [], q7_razones_reprobacion: '',
                         q8_troncales_pendientes: [], q9_electivas_pendientes: [], q10_afectacion: '', q10_afectacion_detalle: '',
@@ -403,8 +435,9 @@
                         q17_propuesta: ''
                     });
                     setApprovedSubjects(new Set());
-                    setOriginalCode(null); setSearchCode(''); setSearchPin(''); setIsEditing(false); setLoading(false);
+                    setOriginalCode(null); setSearchCode(''); setIsEditing(false); setLoading(false);
                     setStep(1); setConsent(false); setQ15OtrosChecked(false);
+                    // Do not reset isAdmin so they can continue working
                 })
                 .catch(err => {
                     console.error(err);
@@ -412,7 +445,7 @@
                 });
             };
 
-            const canProceedToStep3 = () => formData.nombre && formData.codigoRegistro.length === 9 && formData.telefono && formData.email && formData.pin.length === 4 && String(formData.anioIngreso).length === 4 && formData.ppa && !validationError && !duplicateError;
+            const canProceedToStep3 = () => formData.nombre && formData.codigoRegistro.length === 9 && formData.telefono && formData.email && String(formData.anioIngreso).length === 4 && formData.ppa && !validationError && (!duplicateError || isAdmin);
             
             // Función genérica para renderizar cada paso
             const renderSurveyStep = (title, content) => (
@@ -432,7 +465,7 @@
                     <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-between items-center z-50">
                         <button onClick={() => setStep(step - 1)} className="text-slate-500 font-bold hover:text-slate-800 flex items-center gap-2 px-4"><ArrowLeft size={18}/> Atrás</button>
                         {step === 10 ? (
-                            <button onClick={handleSubmit} disabled={loading} className={`px-8 py-3 rounded-full font-bold text-white shadow-lg flex items-center gap-2 ${loading ? 'bg-slate-500' : 'bg-[#00008B] hover:bg-blue-900'}`}>{loading ? 'Enviando...' : 'Finalizar Todo'} <Send size={18}/></button>
+                            <button onClick={handleSubmit} disabled={loading} className={`px-8 py-3 rounded-full font-bold text-white shadow-lg flex items-center gap-2 ${loading ? 'bg-slate-500' : 'bg-[#00008B] hover:bg-blue-900'}`}>{loading ? 'Enviando...' : isAdmin ? 'Actualizar (Admin)' : 'Finalizar Todo'} <Send size={18}/></button>
                         ) : (
                             <button onClick={() => setStep(step + 1)} className="bg-[#00008B] text-white font-bold py-2 px-8 rounded-lg shadow-md flex items-center gap-2 hover:bg-blue-900">Siguiente <ArrowRight size={18}/></button>
                         )}
@@ -440,18 +473,46 @@
                 </div>
             );
 
+            // --- ADMIN MODAL ---
+            if (showAdminLogin) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+                        <div className="bg-white p-8 rounded-xl shadow-lg max-w-sm w-full">
+                            <h2 className="text-xl font-bold text-[#00008B] mb-4 flex items-center gap-2"><Shield /> Acceso Administrativo</h2>
+                            <form onSubmit={handleAdminLogin} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm text-gray-700">Correo Electrónico</label>
+                                    <input type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} className="w-full p-2 border rounded" required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-700">Contraseña Maestra</label>
+                                    <input type="password" value={adminPass} onChange={e => setAdminPass(e.target.value)} className="w-full p-2 border rounded" required />
+                                </div>
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => setShowAdminLogin(false)} className="flex-1 p-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
+                                    <button type="submit" disabled={searching} className="flex-1 bg-[#00008B] text-white p-2 rounded hover:bg-blue-900">{searching ? '...' : 'Entrar'}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
             return (
                 <div className="min-h-screen pb-20">
                     <div className="bg-[#8B0000] text-white shadow-lg border-b-4 border-[#00008B] sticky top-0 z-50">
                         <div className="max-w-7xl mx-auto px-4 py-2">
-                            <div className="flex items-center gap-4 mb-2">
-                                <div className="p-1 bg-white rounded-full shadow-md text-[#8B0000]">
-                                    {LOGO_URL !== "PEGAR_URL_LOGO_AQUI" ? <img src={LOGO_URL} alt="Logo" className="w-16 h-16 object-contain" /> : <i className="fa-solid fa-university text-2xl"></i>}
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-1 bg-white rounded-full shadow-md text-[#8B0000]">
+                                        {LOGO_URL !== "PEGAR_URL_LOGO_AQUI" ? <img src={LOGO_URL} alt="Logo" className="w-10 h-10 object-contain" /> : <i className="fa-solid fa-university text-2xl"></i>}
+                                    </div>
+                                    <div>
+                                        <h1 className="text-lg font-bold font-serif tracking-tight leading-tight">Carrera de Psicología</h1>
+                                        <p className="text-red-100 text-[10px] sm:text-xs">Sistema de Control Académico</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h1 className="text-lg font-bold font-serif tracking-tight leading-tight">Carrera de Psicología</h1>
-                                    <p className="text-red-100 text-[10px] sm:text-xs">Sistema de Control Académico</p>
-                                </div>
+                                {isAdmin && <div className="bg-white text-[#8B0000] px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"><Shield size={12}/> MODO ADMIN</div>}
                             </div>
                             {/* Navegación Horizontal con Scroll */}
                             <div ref={navRef} className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
@@ -485,37 +546,61 @@
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
                                                     <h3 className="font-bold text-[#00008B] mb-3 flex items-center gap-2 text-lg"><Target size={20}/> Objetivo</h3>
-                                                    <p className="text-justify text-slate-600">Conocer tu situación actual, tus percepciones sobre el proceso de transición curricular y tus preferencias para las medidas de adaptación.</p>
+                                                    <p className="text-justify text-slate-600">El presente cuestionario tiene como objetivo realizar una simulación de la transición para evaluar cómo el nuevo Plan podría influir en su trayectoria formativa.</p>
                                                 </div>
                                                 <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
                                                     <h3 className="font-bold text-[#00008B] mb-3 flex items-center gap-2 text-lg"><ListChecks size={20}/> Consigna</h3>
                                                     <p className="text-justify text-slate-600">Le solicitamos responder de manera <strong>sincera y completa</strong>. Sus respuestas serán tratadas con estricta confidencialidad.</p>
                                                 </div>
                                             </div>
-                                            <div className="mt-8 border-t pt-6 flex flex-col items-center gap-4">
-                                                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all">
-                                                    <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="w-5 h-5 accent-[#00008B] cursor-pointer" />
-                                                    <span className="text-slate-700 font-medium select-none">He leído la consigna y acepto participar voluntariamente.</span>
-                                                </label>
-                                                <button onClick={() => setStep(2)} disabled={!consent} className={`font-bold py-3 px-10 rounded-full shadow-lg flex items-center gap-3 transition-all text-lg ${consent ? 'bg-[#00008B] hover:bg-blue-900 text-white transform hover:scale-105 active:scale-95' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}>Comenzar Registro <ArrowRight size={20}/></button>
-                                            </div>
+                                            
+                                            {/* Si NO es admin, muestra consentimiento */}
+                                            {!isAdmin && (
+                                                <div className="mt-8 border-t pt-6 flex flex-col items-center gap-4">
+                                                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all">
+                                                        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="w-5 h-5 accent-[#00008B] cursor-pointer" />
+                                                        <span className="text-slate-700 font-medium select-none">He leído la consigna y acepto participar voluntariamente.</span>
+                                                    </label>
+                                                    <button onClick={() => setStep(2)} disabled={!consent} className={`font-bold py-3 px-10 rounded-full shadow-lg flex items-center gap-3 transition-all text-lg ${consent ? 'bg-[#00008B] hover:bg-blue-900 text-white transform hover:scale-105 active:scale-95' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}>Comenzar Registro <ArrowRight size={20}/></button>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Si ES admin, botón directo */}
+                                            {isAdmin && (
+                                                <div className="mt-8 border-t pt-6 flex flex-col items-center gap-4">
+                                                    <p className="text-green-700 font-bold">Sesión Administrativa Activa</p>
+                                                    <button onClick={() => setStep(2)} className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition-all text-lg flex items-center gap-2">Ir a Panel de Búsqueda <Search size={20}/></button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
+                                
+                                {/* CAJA DE BUSQUEDA / LOGIN ADMIN */}
                                 <div className="text-center">
-                                    <p className="text-sm text-slate-500 mb-4">¿Ya te registraste y necesitas corregir algo?</p>
-                                    <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-                                        <div className="flex gap-2">
-                                            <input type="text" value={searchCode} onChange={(e) => setSearchCode(e.target.value.replace(/\D/g, '').slice(0, 9))} placeholder="Código" className="w-1/2 p-2 text-sm border rounded outline-none" />
-                                            <input type="password" value={searchPin} onChange={(e) => setSearchPin(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="PIN" className="w-1/4 p-2 text-sm border rounded outline-none text-center" />
-                                            <button onClick={handleSearch} disabled={searching} className="bg-slate-700 text-white px-4 rounded text-sm hover:bg-slate-800">{searching ? '...' : 'Editar'}</button>
+                                    {!isAdmin ? (
+                                        <>
+                                            <p className="text-sm text-slate-500 mb-4">Solo para personal autorizado:</p>
+                                            <button onClick={() => setShowAdminLogin(true)} className="text-xs text-slate-400 hover:text-[#00008B] underline">Acceso Administrativo</button>
+                                        </>
+                                    ) : (
+                                        <div className="max-w-md mx-auto bg-green-50 rounded-lg shadow-sm border border-green-200 p-6">
+                                            <h3 className="font-bold text-green-800 mb-2 flex items-center justify-center gap-2"><Search size={16}/> Búsqueda Global (Admin)</h3>
+                                            <div className="flex gap-2">
+                                                <input type="text" value={searchCode} onChange={(e) => setSearchCode(e.target.value.replace(/\D/g, '').slice(0, 9))} placeholder="Ingresa Código de Registro" className="w-full p-2 text-sm border border-green-300 rounded outline-none" />
+                                                <button onClick={handleSearch} disabled={searching} className="bg-green-700 text-white px-6 rounded text-sm hover:bg-green-800 font-bold">{searching ? '...' : 'Buscar'}</button>
+                                            </div>
+                                            <p className="text-xs text-green-600 mt-2">Puedes buscar cualquier registro sin necesidad del PIN.</p>
+                                            {statusMessage && <p className={`mt-2 text-xs font-bold ${status === 'error' ? 'text-red-600' : 'text-green-600'}`}>{statusMessage}</p>}
                                         </div>
-                                        {statusMessage && <p className={`mt-2 text-xs font-bold ${status === 'error' ? 'text-red-600' : 'text-green-600'}`}>{statusMessage}</p>}
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )}
 
+                        {/* ... (EL RESTO DE LOS PASOS 2-10 ES IDÉNTICO AL CÓDIGO ANTERIOR) ... */}
+                        {/* Se repite la estructura de renderizado de pasos */}
+                        
                         {/* PASO 2: IDENTIFICACIÓN */}
                         {step === 2 && (
                             <div className="max-w-4xl mx-auto fade-in">
@@ -541,10 +626,7 @@
                                                 <input required name="codigoRegistro" value={formData.codigoRegistro} onChange={handleChange} className={`w-full mt-1 p-3 border rounded-lg focus:ring-2 outline-none font-mono ${duplicateError ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-slate-300 focus:ring-[#00008B]'}`} placeholder="Ej. 219012345" />
                                                 {duplicateError && <span className="text-red-600 text-xs font-bold mt-1 block">⚠️ Este código ya está registrado.</span>}
                                             </div>
-                                            <div>
-                                                <label className="text-sm font-bold text-slate-700 flex items-center justify-between">PIN de Seguridad (4 dígitos)</label>
-                                                <input required name="pin" value={formData.pin} onChange={handleChange} disabled={isEditing} className={`w-full mt-1 p-3 border rounded-lg text-center tracking-[0.5em] font-mono font-bold text-lg ${isEditing ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'border-slate-300 focus:ring-2 focus:ring-[#00008B] outline-none'}`} placeholder="0000" />
-                                            </div>
+                                            {/* REMOVED PIN INPUT */}
                                         </div>
                                         <div className="space-y-4">
                                             <h3 className="font-bold text-slate-400 text-xs uppercase tracking-wider border-b pb-1">Contacto y Académico</h3>
@@ -574,7 +656,6 @@
                             </div>
                         )}
 
-                        {/* PASO 3: ACADÉMICO (MALLA) */}
                         {step === 3 && (
                             <div className="fade-in space-y-8">
                                 <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 border-[#00008B]">
@@ -629,7 +710,6 @@
                             </div>
                         )}
 
-                        {/* PASO 4: SITUACIÓN ACTUAL */}
                         {step === 4 && renderSurveyStep("I. Datos Generales / Situación Actual", (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
@@ -664,15 +744,9 @@
                             </div>
                         ))}
 
-                        {/* PASO 5: REPROBADAS */}
                         {step === 5 && renderSurveyStep("II. Materias Reprobadas", (
                             <div className="space-y-4">
-                                <MultiSubjectSelect 
-                                    label="6. Indica las materias reprobadas"
-                                    options={allSubjectsList}
-                                    selected={formData.q6_reprobadas}
-                                    onChange={(val) => setFormData(prev => ({...prev, q6_reprobadas: val}))}
-                                />
+                                <MultiSubjectSelect label="6. Indica las materias reprobadas" options={allSubjectsList} selected={formData.q6_reprobadas} onChange={(val) => setFormData(prev => ({...prev, q6_reprobadas: val}))} />
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">7. Razones principales de reprobación</label>
                                     <textarea name="q7_razones_reprobacion" value={formData.q7_razones_reprobacion} onChange={handleChange} className="w-full p-2 border rounded-lg h-24" placeholder="Carga laboral, falta de comprensión, etc..."></textarea>
@@ -680,21 +754,10 @@
                             </div>
                         ))}
 
-                        {/* PASO 6: PENDIENTES */}
                         {step === 6 && renderSurveyStep("III. Materias Atrasadas", (
                             <div className="space-y-4">
-                                <MultiSubjectSelect 
-                                    label="8. Materias troncales pendientes"
-                                    options={allSubjectsList.filter(s => s.id !== 14)} 
-                                    selected={formData.q8_troncales_pendientes}
-                                    onChange={(val) => setFormData(prev => ({...prev, q8_troncales_pendientes: val}))}
-                                />
-                                <MultiSubjectSelect 
-                                    label="9. Materias electivas pendientes"
-                                    options={allSubjectsList.filter(s => s.c.startsWith("ELEC") || s.c.startsWith("COMP") || s.c.startsWith("LENG") || s.c.startsWith("ING"))} 
-                                    selected={formData.q9_electivas_pendientes}
-                                    onChange={(val) => setFormData(prev => ({...prev, q9_electivas_pendientes: val}))}
-                                />
+                                <MultiSubjectSelect label="8. Materias troncales pendientes" options={allSubjectsList.filter(s => s.id !== 14)} selected={formData.q8_troncales_pendientes} onChange={(val) => setFormData(prev => ({...prev, q8_troncales_pendientes: val}))} />
+                                <MultiSubjectSelect label="9. Materias electivas pendientes" options={allSubjectsList.filter(s => s.c.startsWith("ELEC") || s.c.startsWith("COMP") || s.c.startsWith("LENG") || s.c.startsWith("ING"))} selected={formData.q9_electivas_pendientes} onChange={(val) => setFormData(prev => ({...prev, q9_electivas_pendientes: val}))} />
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">10. ¿Estas materias afectan tu avance?</label>
                                     <div className="flex gap-4 flex-wrap">
@@ -711,25 +774,13 @@
                             </div>
                         ))}
 
-                        {/* PASO 7: ADELANTADAS */}
                         {step === 7 && renderSurveyStep("IV. Materias Adelantadas", (
                             <div className="space-y-4">
-                                <MultiSubjectSelect 
-                                    label="11. Materias troncales adelantadas"
-                                    options={allSubjectsList.filter(s => s.id !== 14)} 
-                                    selected={formData.q11_troncales_adelantadas}
-                                    onChange={(val) => setFormData(prev => ({...prev, q11_troncales_adelantadas: val}))}
-                                />
-                                <MultiSubjectSelect 
-                                    label="12. Materias electivas adelantadas"
-                                    options={allSubjectsList.filter(s => s.c.startsWith("ELEC") || s.c.startsWith("COMP") || s.c.startsWith("LENG") || s.c.startsWith("ING"))} 
-                                    selected={formData.q12_electivas_adelantadas}
-                                    onChange={(val) => setFormData(prev => ({...prev, q12_electivas_adelantadas: val}))}
-                                />
+                                <MultiSubjectSelect label="11. Materias troncales adelantadas" options={allSubjectsList.filter(s => s.id !== 14)} selected={formData.q11_troncales_adelantadas} onChange={(val) => setFormData(prev => ({...prev, q11_troncales_adelantadas: val}))} />
+                                <MultiSubjectSelect label="12. Materias electivas adelantadas" options={allSubjectsList.filter(s => s.c.startsWith("ELEC") || s.c.startsWith("COMP") || s.c.startsWith("LENG") || s.c.startsWith("ING"))} selected={formData.q12_electivas_adelantadas} onChange={(val) => setFormData(prev => ({...prev, q12_electivas_adelantadas: val}))} />
                             </div>
                         ))}
 
-                        {/* PASO 8: EXPECTATIVAS */}
                         {step === 8 && renderSurveyStep("V. Expectativas", (
                             <div className="space-y-6">
                                 <div>
@@ -775,7 +826,6 @@
                             </div>
                         ))}
 
-                        {/* PASO 9: MEDIDAS */}
                         {step === 9 && renderSurveyStep("VI. Medidas de Transición", (
                             <div className="space-y-6">
                                 <div>
@@ -815,7 +865,6 @@
                             </div>
                         ))}
 
-                        {/* PASO 10: COMENTARIOS Y FINAL */}
                         {step === 10 && renderSurveyStep("VII. Comentarios Finales", (
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-2">17. Propuesta para mejorar la transición</label>
@@ -832,5 +881,3 @@
     </script>
 </body>
 </html>
-
-
