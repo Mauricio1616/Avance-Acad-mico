@@ -2,357 +2,1152 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Plataforma Académica</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psiconet - Malla Curricular</title>
+    
+    <!-- TAILWIND CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="importmap">
-    { "imports": { "react": "https://esm.sh/react@18.2.0", "react-dom/client": "https://esm.sh/react-dom@18.2.0/client", "lucide-react": "https://esm.sh/lucide-react@0.263.1" } }
+    
+    <!-- LUCIDE ICONS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        psych: {
+                            blue: '#002855', // Azul Oscuro Institucional
+                            red: '#881313',  // Rojo Oscuro Institucional
+                        },
+                        slate: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a' },
+                    },
+                    animation: {
+                        'fade-in-down': 'fadeInDown 0.5s ease-out',
+                    },
+                    keyframes: {
+                        fadeInDown: {
+                            '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
     </script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
-        body { background-color: #f3f4f6; font-family: 'Segoe UI', sans-serif; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Estilos de Impresión */
+        @media print {
+            @page { margin: 1.5cm; size: A4; }
+            html, body { height: auto !important; overflow: visible !important; background: white !important; }
+            .no-print, header, #view-map, #footer-legend, #download-modal, #map-instructions { display: none !important; } /* Ocultar modal e instrucciones al imprimir */
+            main { height: auto !important; overflow: visible !important; display: block !important; position: relative !important; }
+            #view-report { display: block !important; position: static !important; height: auto !important; overflow: visible !important; background: white !important; }
+            
+            /* Inputs de texto limpios para impresión */
+            input:not([type="checkbox"]), textarea, select { 
+                border: none !important; 
+                border-bottom: 1px solid #002855 !important; /* Azul en impresión */
+                padding: 0 !important; 
+                font-weight: 500 !important; 
+                color: #0f172a !important; 
+                background: transparent !important; 
+                width: 100% !important;
+                resize: none;
+                appearance: none; /* Quitar flecha de select */
+            }
+            input::placeholder, textarea::placeholder { color: transparent !important; }
+            
+            /* Checkboxes visibles en impresión */
+            input[type="checkbox"] {
+                appearance: auto !important;
+                border: 1px solid #000 !important;
+                display: inline-block !important;
+            }
+
+            label { display: block !important; color: #64748b !important; font-size: 10px !important; text-transform: uppercase !important; font-weight: bold !important; margin-bottom: 2px !important; }
+            .break-inside-avoid { page-break-inside: avoid; }
+            
+            /* Ocultar bordes de secciones en impresión para limpieza */
+            .print-clean-container { border: none !important; padding: 0 !important; background: transparent !important; }
+
+            /* Asegurar imagen visible y controlada en impresión */
+            img { display: block !important; max-width: 100% !important; }
+            #header-img { max-height: 120px !important; width: auto !important; } /* Control estricto de altura */
+        }
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="bg-white text-slate-800 h-screen flex flex-col overflow-hidden">
 
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect } from 'react';
-        import { createRoot } from 'react-dom/client';
-        import { User, Lock, Layout, Plus, Trash2, Save, Edit, Settings, BarChart2, Image as ImageIcon, ArrowLeft, Send, LogOut, RefreshCw, AlertTriangle, CheckCircle, Database } from 'lucide-react';
+    <!-- HEADER -->
+    <header class="bg-white border-b-4 border-psych-red px-6 py-4 flex justify-between items-center shadow-md z-20 relative no-print">
+        <div class="flex items-center gap-4">
+            <button id="btn-back" class="hidden p-2 hover:bg-slate-100 rounded-full transition-colors" onclick="switchView('map')">
+                <i data-lucide="arrow-left" class="w-5 h-5 text-psych-blue"></i>
+            </button>
+            <div>
+                <img src="img/Encabezado.png" alt="Psiconet" class="h-16 object-contain">
+            </div>
+        </div>
+        
+        <div class="flex gap-4 items-center">
+            <input type="text" id="quick-name" placeholder="Nombre del Estudiante" class="border border-slate-300 rounded-md px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-psych-blue hidden md:block" oninput="syncInputs(this.value, 'name')">
+            <div id="controls-map" class="flex gap-2">
+                <button onclick="switchView('report')" class="flex items-center gap-2 bg-psych-blue text-white px-4 py-2 rounded-lg hover:bg-slate-900 transition-colors shadow-sm text-sm border-b-2 border-slate-900">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Ver Reporte
+                </button>
+                <button onclick="downloadJSON()" class="flex items-center gap-2 bg-white text-psych-red border border-psych-red px-3 py-2 rounded-lg hover:bg-red-50 transition-colors text-sm" title="Descargar Datos JSON">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="controls-report" class="hidden flex gap-2">
+                <!-- Botón SOLO Descargar PDF (abre modal) -->
+                <button onclick="showDownloadModal()" class="flex items-center gap-2 bg-psych-red text-white px-6 py-2 rounded-lg hover:bg-red-900 transition-colors shadow-md animate-pulse font-medium">
+                    <i data-lucide="file-down" class="w-4 h-4"></i> Finalizar y Descargar
+                </button>
+            </div>
+        </div>
+    </header>
 
-        // ⚠️ PEGA AQUÍ TU NUEVA URL DE LA VERSIÓN 5.0 ⚠️
-        const API_URL = "https://script.google.com/macros/s/AKfycbzCnEYOzfCEUchboEZiB5Y5XUs89YeXjLDADtsgvJS8MY99VLByO3aANEEaANj2aZw/exec";
-        const LOGO_URL = "img/psicologia.png"; 
-
-        // --- API HELPERS ---
-        const api = async (action, params = {}, method = 'GET') => {
-            const url = `${API_URL}?action=${action}${method === 'GET' ? '&' + new URLSearchParams(params) : ''}`;
-            const opts = method === 'POST' ? { method: 'POST', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(params) } : {};
-            
-            try {
-                const res = await fetch(url, opts);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                if (data.error) throw new Error(data.error);
-                return data;
-            } catch (e) { throw new Error(e.message || "Error conexión"); }
-        };
-
-        // --- COMPONENTES ---
-
-        const StatusFooter = () => {
-            const [status, setStatus] = useState('Comprobando...');
-            const [color, setColor] = useState('text-gray-500');
-
-            useEffect(() => {
-                api('status').then(d => {
-                    if(d.version === 'v5.0') {
-                        setStatus('Conectado: v5.0 (Listo)');
-                        setColor('text-green-600');
-                    } else {
-                        setStatus(`Versión Incorrecta: ${d.version || 'Desconocida'} (Actualiza URL)`);
-                        setColor('text-red-600');
-                    }
-                }).catch(e => {
-                    setStatus('Error de conexión: ' + e.message);
-                    setColor('text-red-600');
-                });
-            }, []);
-
-            return (
-                <div className={`fixed bottom-0 right-0 p-2 bg-white/90 border-t text-xs font-bold ${color} flex items-center gap-1 z-50`}>
-                    <Database size={12}/> {status}
-                </div>
-            );
-        };
-
-        const Login = ({ onLogin }) => {
-            const [creds, setCreds] = useState({email: '', pass: ''});
-            const [loading, setLoading] = useState(false);
-
-            const submit = async (e) => {
-                e.preventDefault();
-                setLoading(true);
-                try {
-                    const res = await api('adminLogin', creds);
-                    if (res.success) onLogin(); else alert("Acceso denegado");
-                } catch (e) { alert(e.message); }
-                setLoading(false);
-            };
-
-            return (
-                <div className="flex items-center justify-center min-h-[60vh]">
-                    <form onSubmit={submit} className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm border-t-4 border-[#8B0000] space-y-4">
-                        <h2 className="text-2xl font-bold text-center">Acceso Editor</h2>
-                        <input className="w-full p-2 border rounded" type="email" placeholder="Email" value={creds.email} onChange={e=>setCreds({...creds, email: e.target.value})} required />
-                        <input className="w-full p-2 border rounded" type="password" placeholder="Contraseña" value={creds.pass} onChange={e=>setCreds({...creds, pass: e.target.value})} required />
-                        <button disabled={loading} className="w-full bg-[#8B0000] text-white p-2 rounded hover:bg-red-900 font-bold transition">
-                            {loading ? 'Verificando...' : 'Ingresar'}
-                        </button>
-                    </form>
-                </div>
-            );
-        };
-
-        const Dashboard = ({ onCreate, onEdit, onLogout }) => {
-            const [forms, setForms] = useState([]);
-            const [loading, setLoading] = useState(true);
-
-            const load = () => {
-                setLoading(true);
-                api('getFormsList', { onlyPublic: false })
-                    .then(data => { setForms(Array.isArray(data) ? data : []); setLoading(false); })
-                    .catch(() => { setForms([]); setLoading(false); });
-            };
-
-            useEffect(load, []);
-
-            const del = async (e, id) => {
-                e.stopPropagation();
-                if(!confirm("¿Borrar?")) return;
-                try { await api('deleteForm', { formId: id }, 'POST'); load(); } catch(e){ alert(e.message); }
-            };
-
-            return (
-                <div className="max-w-6xl mx-auto p-6">
-                    <div className="flex justify-between items-center mb-8">
-                        <h2 className="text-3xl font-bold text-gray-800">Cuestionarios</h2>
-                        <div className="flex gap-2">
-                            <button onClick={onCreate} className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 flex items-center gap-2"><Plus size={18}/> Nuevo</button>
-                            <button onClick={onLogout} className="text-red-600 px-3 py-2 hover:bg-red-50 rounded"><LogOut size={18}/></button>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 relative overflow-hidden bg-slate-50">
+        
+        <!-- INSTRUCCIONES FLOTANTES (Solo Mapa) -->
+        <div id="map-instructions" class="absolute top-6 left-6 z-40 max-w-sm pointer-events-none no-print transition-all duration-300">
+            <div class="bg-white/95 backdrop-blur shadow-2xl rounded-xl border-l-4 border-psych-blue p-4 pointer-events-auto animate-fade-in-down ring-1 ring-slate-900/5">
+                <div class="flex justify-between items-start gap-3">
+                    <div class="flex gap-3">
+                        <div class="mt-1 bg-blue-50 p-2.5 rounded-lg text-psych-blue shadow-sm border border-blue-100">
+                            <i data-lucide="mouse-pointer-2" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm">¿Cómo actualizar tu avance?</h3>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                                Dale <strong>clic a las materias</strong> para cambiar su estado. Siguen este orden cíclico:
+                            </p>
+                            <div class="mt-2 flex flex-wrap gap-1 items-center">
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white border border-slate-300 text-slate-500 shadow-sm">Pendiente</span>
+                                <span class="text-slate-300 text-[10px]"><i data-lucide="arrow-right" class="w-3 h-3"></i></span>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">Cursando</span>
+                                <span class="text-slate-300 text-[10px]"><i data-lucide="arrow-right" class="w-3 h-3"></i></span>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">Aprobada</span>
+                            </div>
                         </div>
                     </div>
-                    {loading ? <div className="text-center p-10"><RefreshCw className="animate-spin inline"/> Cargando...</div> : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {forms.map(f => (
-                                <div key={f.id} className="bg-white rounded-lg shadow hover:shadow-lg border border-gray-200 overflow-hidden">
-                                    <div className="p-5">
-                                        <div className="flex justify-between mb-2">
-                                            <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${f.status==='public'?'bg-green-100 text-green-800':'bg-gray-200'}`}>{f.status}</span>
-                                            <button onClick={(e)=>del(e,f.id)} className="text-red-400 hover:text-red-600"><Trash2 size={14}/></button>
-                                        </div>
-                                        <h3 className="font-bold text-[#8B0000] truncate">{f.title}</h3>
-                                        <p className="text-sm text-gray-500 line-clamp-2">{f.description}</p>
-                                    </div>
-                                    <div className="bg-gray-50 p-3 flex justify-around border-t">
-                                        <button onClick={()=>onEdit(f.id)} className="text-blue-600 font-bold text-sm flex items-center gap-1"><Edit size={14}/> Editar</button>
-                                        <button onClick={()=>window.open(API_URL.replace('/exec','/dev') + `?action=getResponses&formId=${f.id}`)} className="text-purple-600 font-bold text-sm flex items-center gap-1"><BarChart2 size={14}/> Datos</button>
+                    <button onclick="dismissInstructions()" class="text-slate-400 hover:text-psych-red bg-slate-50 hover:bg-red-50 p-1 rounded-md transition-colors" title="Cerrar instrucciones">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA: MAPA -->
+        <div id="view-map" class="absolute inset-0 overflow-auto p-8" onscroll="updateLines()">
+            <div class="relative min-w-[3400px] min-h-[1400px]">
+                <svg id="connections-layer" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" /></marker>
+                        <!-- Flecha Activa: Azul Institucional -->
+                        <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#002855" /></marker>
+                    </defs>
+                </svg>
+                <div id="semesters-container" class="flex gap-12 z-10 relative"></div>
+            </div>
+        </div>
+
+        <!-- VISTA: REPORTE -->
+        <div id="view-report" class="hidden absolute inset-0 overflow-auto bg-white">
+            <div class="max-w-4xl mx-auto p-8 min-h-screen">
+                
+                <!-- IMAGEN DE ENCABEZADO -->
+                <div class="mb-6 w-full flex justify-center">
+                    <img id="header-img" src="img/Encabezado.png" alt="Encabezado Institucional" class="h-32 object-contain" onerror="this.style.display='none'">
+                </div>
+
+                <!-- Encabezado del Reporte -->
+                <div class="border-b-4 border-psych-blue pb-6 mb-8">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h1 class="text-3xl font-bold text-psych-blue uppercase tracking-tight">Reporte Académico</h1>
+                            <h2 class="text-xl text-psych-red font-medium">Psicología - UAGRM</h2>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-slate-500 font-medium">Fecha de Emisión</div>
+                            <div class="text-lg font-bold text-slate-800" id="report-date"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 print-clean-container">
+                        <h3 class="text-sm font-bold text-psych-blue uppercase mb-4 tracking-wider no-print">Datos del Estudiante</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print:gap-4">
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 no-print"></i> 1.- Nombre Completo</label>
+                                <input type="text" id="input-name" placeholder="Ej. Juan Pérez" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-bold focus:ring-2 focus:ring-psych-blue focus:outline-none" oninput="syncInputs(this.value, 'name')">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="hash" class="w-3 h-3 no-print"></i> 2.- Registro Universitario</label>
+                                <input type="text" id="input-registry" placeholder="Ej. 202300000" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 no-print"></i> 3.- Número de celular</label>
+                                <input type="text" id="input-phone" placeholder="Ej. 70000000" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 no-print"></i> 4.- Correo Electrónico</label>
+                                <input type="text" id="input-email" placeholder="Ej. estudiante@uagrm.edu.bo" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estadísticas Automáticas -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase mb-3 tracking-wider">Estado Académico Actual</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+                        <!-- Nivel Alcanzado -->
+                        <div class="col-span-2 md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100 text-center flex flex-col justify-center print-clean-container shadow-sm relative overflow-hidden">
+                            <span id="stat-max-semester" class="text-3xl font-black text-psych-blue">1º Sem</span>
+                            <span class="text-[10px] text-slate-500 uppercase font-bold mt-1">Nivel Actual</span>
+                            <div id="stat-leveling-container" class="mt-2 flex flex-col items-center">
+                                <span id="stat-leveling-status" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Calculando...</span>
+                            </div>
+                        </div>
+                        <!-- Avance -->
+                        <div class="col-span-2 md:col-span-1 bg-white p-4 rounded-lg border border-slate-200 text-center flex flex-col justify-center print-clean-container">
+                            <span id="stat-progress" class="text-3xl font-black text-slate-700">0%</span>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold mt-1">Avance</span>
+                        </div>
+                        <!-- Contadores -->
+                        <div class="bg-white p-3 rounded-lg border border-emerald-100 shadow-sm flex flex-col items-center justify-center print-clean-container">
+                            <span id="stat-approved" class="text-2xl font-bold text-emerald-600">0</span>
+                            <span class="text-xs text-slate-600 font-medium">Aprob.</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+                            <span id="stat-pending" class="text-2xl font-bold text-slate-500">67</span>
+                            <span class="text-xs text-slate-600 font-medium">Pend.</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-red-100 shadow-sm flex flex-col items-center justify-center print-clean-container">
+                            <span id="stat-failed" class="text-2xl font-bold text-psych-red">0</span>
+                            <span class="text-xs text-slate-600 font-medium">Reprob.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DIAGNÓSTICO INSTITUCIONAL FORMAL -->
+                <div class="mb-8 break-inside-avoid print:break-before-page">
+                    <div class="bg-slate-50 border-2 border-slate-200 rounded-xl p-8 relative shadow-sm">
+                        <!-- Título & Objetivo -->
+                        <div class="mb-8 border-b-2 border-psych-blue pb-6">
+                            <h2 class="text-2xl font-bold text-psych-blue text-center mb-4 uppercase tracking-tight">Encuesta para Estudiantes sobre Situación Académica y Transición al Nuevo Currículo</h2>
+                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-psych-blue">
+                                <p class="text-sm text-slate-700 text-justify">
+                                    <span class="font-bold text-psych-blue">OBJETIVO:</span> Conocer tu situación actual, tus percepciones sobre el proceso de transición curricular y tus preferencias respecto a las medidas de adaptación.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Sección 1 -->
+                        <div class="mb-8">
+                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 1.- Datos Generales / Situación Actual</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6 border-l border-r border-b border-slate-200">
+                                
+                                <div class="md:col-span-2">
+                                    <p class="text-xs text-slate-500 italic flex items-center gap-1">
+                                        <i data-lucide="info" class="w-3 h-3"></i>
+                                        Las preguntas 1 a 5 se completan automáticamente con los datos del encabezado y el cálculo del sistema.
+                                    </p>
+                                </div>
+                                
+                                <!-- Q6 -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">6.- Carga académica registrada este semestre:</label>
+                                    <div class="flex items-center gap-3 bg-slate-50 p-2 rounded border border-slate-200">
+                                        <span class="text-xs font-semibold text-slate-600 uppercase">• Número de materias inscritas:</span>
+                                        <input type="number" id="survey-q6" class="w-20 border-b-2 border-slate-300 focus:border-psych-blue text-center text-sm font-bold text-psych-blue focus:outline-none bg-transparent" placeholder="#">
                                     </div>
                                 </div>
-                            ))}
-                            {forms.length===0 && <div className="col-span-full text-center py-10 text-gray-400 border border-dashed rounded">No hay cuestionarios.</div>}
-                        </div>
-                    )}
-                </div>
-            );
-        };
 
-        const FormEditor = ({ formId, onBack }) => {
-            const [form, setForm] = useState(null);
-            const [saving, setSaving] = useState(false);
-            const [tab, setTab] = useState('build');
+                                <!-- Q7 -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">7.- ¿Trabajas mientras estudias?</label>
+                                    <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                                        <select id="survey-q7" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
+                                            <option value="" disabled selected>Selecciona una opción...</option>
+                                            <option value="Sí">Sí</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-            useEffect(() => {
-                if(formId === 'new') {
-                    setForm({ id: 'F'+Date.now(), settings: { title: "Nuevo", description: "", visibility: "private" }, sections: [{id: 's1', title: 'Sección 1', questions: []}] });
-                } else {
-                    api('getFormConfig', { formId }).then(setForm).catch(e => { alert(e.message); onBack(); });
-                }
-            }, [formId]);
+                                <!-- Q8 -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">8.- ¿Cuántas horas al día puedes dedicar al estudio?</label>
+                                    <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                                        <input type="number" id="survey-q8" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700" placeholder="Indicar número">
+                                    </div>
+                                </div>
 
-            const save = async () => {
-                if(!confirm("¿Guardar cambios?")) return;
-                setSaving(true);
-                try {
-                    const res = await api('saveForm', { form }, 'POST');
-                    console.log("res: " + res);
-                    if(res.success) alert("✅ Guardado Exitoso"); else alert("Error: "+res.message);
-                } catch(e) { alert("Error: "+e.message); }
-                setSaving(false);
-            };
-
-            const updateSettings = (k, v) => setForm(p => ({...p, settings: {...p.settings, [k]: v}}));
-            const addSection = () => setForm(p => ({...p, sections: [...p.sections, {id: 's'+Date.now(), title: "Nueva Sección", questions: []}]}));
-            const updateSection = (i, v) => setForm(p => { const s = [...p.sections]; s[i].title = v; return {...p, sections: s}; });
-            const delSection = (i) => { if(confirm("Borrar?")) setForm(p => { const s = [...p.sections]; s.splice(i,1); return {...p, sections: s}; }); };
-            const addQ = (si) => setForm(p => { const s = [...p.sections]; s[si].questions.push({id: 'q'+Date.now(), text: "Pregunta", type: "text"}); return {...p, sections: s}; });
-            const updateQ = (si, qi, k, v) => setForm(p => { const s = [...p.sections]; s[si].questions[qi][k] = (k==='options' && typeof v === 'string') ? v.split(',') : v; return {...p, sections: s}; });
-            const delQ = (si, qi) => setForm(p => { const s = [...p.sections]; s[si].questions.splice(qi,1); return {...p, sections: s}; });
-
-            if(!form) return <div className="p-10 text-center">Cargando...</div>;
-
-            return (
-                <div className="flex h-screen bg-gray-100">
-                    <div className="w-64 bg-white border-r flex flex-col">
-                        <div className="p-4 border-b">
-                            <button onClick={onBack} className="text-gray-500 hover:text-black mb-4 flex items-center gap-1"><ArrowLeft size={14}/> Volver</button>
-                            <h2 className="font-bold truncate">{form.settings.title}</h2>
-                        </div>
-                        <div className="p-2 space-y-1">
-                            <button onClick={()=>setTab('build')} className={`w-full text-left px-3 py-2 rounded ${tab==='build'?'bg-blue-50 text-blue-700 font-bold':'text-gray-600 hover:bg-gray-50'}`}>Constructor</button>
-                            <button onClick={()=>setTab('settings')} className={`w-full text-left px-3 py-2 rounded ${tab==='settings'?'bg-blue-50 text-blue-700 font-bold':'text-gray-600 hover:bg-gray-50'}`}>Configuración</button>
-                        </div>
-                        <div className="mt-auto p-4 border-t">
-                            <button onClick={save} disabled={saving} className="w-full bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700 disabled:opacity-50">{saving ? 'Guardando...' : 'Guardar Todo'}</button>
-                        </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-8">
-                        {tab === 'settings' && (
-                            <div className="max-w-xl mx-auto bg-white p-6 rounded shadow space-y-4">
-                                <h3 className="font-bold text-lg">Configuración</h3>
-                                <div><label className="block text-sm font-bold">Título</label><input className="w-full border p-2 rounded" value={form.settings.title} onChange={e=>updateSettings('title', e.target.value)} /></div>
-                                <div><label className="block text-sm font-bold">Descripción</label><textarea className="w-full border p-2 rounded h-24" value={form.settings.description} onChange={e=>updateSettings('description', e.target.value)} /></div>
-                                <div><label className="block text-sm font-bold">Visibilidad</label><select className="w-full border p-2 rounded" value={form.settings.visibility} onChange={e=>updateSettings('visibility', e.target.value)}><option value="private">Privado</option><option value="public">Público</option></select></div>
+                                <!-- Q9 -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">9.- Estado general de avance académico:</label>
+                                    <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                                        <select id="survey-q9" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
+                                            <option value="" disabled selected>Selecciona una opción...</option>
+                                            <option value="Voy al día">Voy al día</option>
+                                            <option value="Ligeramente atrasado(a)">Ligeramente atrasado(a)</option>
+                                            <option value="Atraso moderado">Atraso moderado</option>
+                                            <option value="Atraso significativo">Atraso significativo</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                        )}
-                        {tab === 'build' && (
-                            <div className="max-w-3xl mx-auto space-y-6 pb-20">
-                                {form.sections.map((s, si) => (
-                                    <div key={s.id} className="bg-white rounded shadow border border-gray-200">
-                                        <div className="bg-blue-50 p-4 border-b flex justify-between items-center">
-                                            <input className="bg-transparent font-bold text-lg text-[#8B0000] w-full outline-none" value={s.title} onChange={e=>updateSection(si, e.target.value)} />
-                                            <button onClick={()=>delSection(si)} className="text-red-400 hover:text-red-600"><Trash2 size={16}/></button>
-                                        </div>
-                                        <div className="p-4 space-y-4">
-                                            {s.questions.map((q, qi) => (
-                                                <div key={q.id} className="border p-4 rounded bg-gray-50/50 hover:shadow-sm">
-                                                    <div className="flex gap-2 mb-2">
-                                                        <input className="flex-1 p-2 border rounded" placeholder="Pregunta" value={q.text} onChange={e=>updateQ(si, qi, 'text', e.target.value)} />
-                                                        <select className="p-2 border rounded" value={q.type} onChange={e=>updateQ(si, qi, 'type', e.target.value)}><option value="text">Texto</option><option value="textarea">Párrafo</option><option value="select">Lista</option><option value="radio">Radio</option><option value="checkbox">Checkbox</option></select>
-                                                    </div>
-                                                    {['select','radio','checkbox'].includes(q.type) && <input className="w-full p-2 border rounded text-sm mb-2" placeholder="Opciones (separar por coma)" value={q.options?.join(',')} onChange={e=>updateQ(si, qi, 'options', e.target.value)} />}
-                                                    <div className="flex justify-between items-center">
-                                                        <input className="text-xs p-1 border rounded w-1/2" placeholder="URL Imagen" value={q.imageUrl||''} onChange={e=>updateQ(si, qi, 'imageUrl', e.target.value)} />
-                                                        <button onClick={()=>delQ(si, qi)} className="text-xs text-red-500 hover:underline">Eliminar</button>
-                                                    </div>
-                                                    {q.imageUrl && <img src={q.imageUrl} className="h-16 mt-2 rounded border" />}
-                                                </div>
-                                            ))}
-                                            <button onClick={()=>addQ(si)} className="w-full py-2 border-2 border-dashed rounded text-gray-400 hover:text-blue-500 font-bold">+ Pregunta</button>
+                        </div>
+
+                        <!-- Sección 3 -->
+                        <div class="mb-8">
+                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 3.- Materias Atrasadas (Troncales / Electivas)</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm border-l border-r border-b border-slate-200">
+                                 <p class="text-xs text-slate-500 italic mb-4 flex items-center gap-1">
+                                    <i data-lucide="info" class="w-3 h-3"></i>
+                                    Las preguntas 11 y 12 (listado de materias pendientes) son generadas automáticamente por el reporte de la Malla Interactiva.
+                                 </p>
+                                 <!-- Q13 -->
+                                 <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">13.- ¿Estas materias afectan tu avance hacia el nuevo currículo?</label>
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                        <select id="survey-q13" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 mb-3 font-medium text-slate-700" onchange="toggleDepende(this)">
+                                            <option value="" disabled selected>Selecciona una opción...</option>
+                                            <option value="Sí">Sí</option>
+                                            <option value="No">No</option>
+                                            <option value="No sé">No sé</option>
+                                            <option value="Depende">Depende</option>
+                                        </select>
+                                        <input type="text" id="dep-13" class="hidden w-full border-b border-slate-300 text-sm italic text-slate-600 focus:outline-none focus:border-psych-blue py-1 animate-fade-in" placeholder="Explica: Depende de qué...">
+                                    </div>
+                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección 5 -->
+                        <div class="mb-8">
+                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 5.- Expectativas frente al Nuevo Currículo</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm space-y-6 border-l border-r border-b border-slate-200">
+                                <!-- Q16 -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">16.- ¿Cómo te sientes respecto a la implementación del nuevo currículo?</label>
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                        <select id="survey-q16" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
+                                            <option value="" disabled selected>Selecciona una opción...</option>
+                                            <option value="Motivado">Motivado(a): lo veo como una oportunidad para mejorar la formación.</option>
+                                            <option value="Cauteloso">Cauteloso(a): prefiero observar cómo se desarrolla antes de opinar.</option>
+                                            <option value="Preocupado">Preocupado(a): temo que afecte mi avance académico.</option>
+                                            <option value="Indiferente">Indiferente: no creo que cambie mucho mi situación.</option>
+                                            <option value="Confundido">Confundido(a): aún no comprendo bien el nuevo plan.</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Q17 -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">17.- ¿Qué crees que aportará el nuevo currículo?</label>
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                        <select id="survey-q17" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 mb-3 font-medium text-slate-700" onchange="toggleOtro(this, 'other-17')">
+                                            <option value="" disabled selected>Selecciona una opción...</option>
+                                            <option value="Organización">Mejor organización del avance académico</option>
+                                            <option value="Secuencias">Secuencias más claras y lógicas de contenido</option>
+                                            <option value="Flexibilidad">Mayor flexibilidad</option>
+                                            <option value="Claridad">Claridad en perfiles y competencias</option>
+                                            <option value="Ninguna">Ninguna de las anteriores</option>
+                                            <option value="Otro">Otra opinión</option>
+                                        </select>
+                                        <input type="text" id="other-17" class="hidden w-full border-b border-slate-300 text-sm italic text-slate-600 focus:outline-none focus:border-psych-blue py-1 animate-fade-in" placeholder="Escribe tu opinión aquí...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección 6 -->
+                        <div class="mb-8">
+                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 6.- Medidas de Transición Preferidas</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm space-y-6 border-l border-r border-b border-slate-200">
+                                <!-- Q18 -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-3">18.- Medidas que consideras útiles para tu avance (selección múltiple):</label>
+                                    <div id="survey-q18-container" class="space-y-2 ml-2 bg-slate-50 p-4 rounded border border-slate-200">
+                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos verano" class="accent-psych-blue w-4 h-4"> Cursos de verano intensivos (para adelantar o recuperar)</label>
+                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Semestres igualacion" class="accent-psych-blue w-4 h-4"> Semestres de igualación sin prerrequisitos</label>
+                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos nivelacion" class="accent-psych-blue w-4 h-4"> Cursos especiales de nivelación en el semestre</label>
+                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Tutorias" class="accent-psych-blue w-4 h-4"> Tutorías académicas personalizadas</label>
+                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Flexibilidad prerrequisitos" class="accent-psych-blue w-4 h-4"> Adaptación flexible de prerrequisitos por única vez</label>
+                                        <div class="pt-2">
+                                            <label class="flex items-center gap-3 text-sm text-slate-700 font-medium mb-1"><input type="checkbox" id="q18-other-check" value="Otro" class="accent-psych-blue w-4 h-4"> Otros:</label>
+                                            <input type="text" id="q18-other-text" class="w-full border-b border-slate-300 text-sm italic ml-7 focus:outline-none focus:border-psych-blue bg-transparent" placeholder="Especifique...">
                                         </div>
                                     </div>
-                                ))}
-                                <button onClick={addSection} className="w-full py-3 bg-white border shadow text-gray-600 font-bold hover:bg-gray-50 rounded">+ Añadir Sección</button>
+                                </div>
+                                <!-- Q19 -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">19.- De esas medidas que consideras útiles para tu avance cual sería Prioridad absoluta (elige solo una):</label>
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                        <select id="survey-q19" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
+                                            <option value="" disabled selected>Selecciona una opción...</option>
+                                            <option value="Verano">Cursos de verano intensivos</option>
+                                            <option value="Igualación">Semestres de igualación sin prerrequisitos</option>
+                                            <option value="Nivelación">Cursos especiales de nivelación</option>
+                                            <option value="Tutorías">Tutorías académicas personalizadas</option>
+                                            <option value="Flexibilidad">Adaptación flexible de prerrequisitos</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                        )}
+                        </div>
+
+                        <!-- Sección 7 -->
+                        <div class="mb-4">
+                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 7.- Comentarios Finales</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm border-l border-r border-b border-slate-200">
+                                <!-- Q20 -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">20.- Propuesta para mejorar la transición (respuesta abierta):</label>
+                                    <textarea id="survey-q20" rows="4" class="w-full border-2 border-slate-300 rounded-lg p-3 text-sm focus:border-psych-blue focus:outline-none focus:ring-1 focus:ring-blue-100 transition-all" placeholder="Escribe tu propuesta aquí..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer del Formulario -->
+                        <div class="mt-6 text-center no-print">
+                            <p class="text-xs text-slate-400 mb-4">Asegúrese de haber completado todos los campos requeridos antes de imprimir.</p>
+                        </div>
                     </div>
                 </div>
-            );
-        };
 
-        const StudentForm = ({ form, onBack }) => {
-            const [answers, setAnswers] = useState({});
-            const [sending, setSending] = useState(false);
+                <!-- Listado Materias -->
+                <div id="report-semesters-list" class="space-y-6"></div>
 
-            const handleChange = (qid, val) => setAnswers(p => ({ ...p, [qid]: val }));
+                <div class="mt-12 pt-8 border-t border-slate-300 flex justify-between text-xs text-slate-400">
+                    <p>Generado por Psiconet</p>
+                    <p class="border-t border-slate-400 px-8 pt-1">Firma Director(a) de Carrera</p>
+                </div>
+            </div>
+        </div>
+    </main>
 
-            const submit = async () => {
-                if(!confirm("¿Enviar?")) return;
-                setSending(true);
-                try {
-                    const res = await api('submitResponse', { formId: form.id, data: answers }, 'POST');
-                    if (res.success) { alert("¡Enviado!"); onBack(); }
-                    else alert("Error: " + res.message);
-                } catch (e) { alert("Error: " + e.message); }
-                setSending(false);
-            };
+    <footer id="footer-legend" class="no-print absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white px-6 py-3 rounded-full shadow-lg border border-slate-200 z-50 flex gap-6 items-center whitespace-nowrap">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2">Leyenda:</span>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-white border-gray-300"></div><span class="text-xs text-slate-700">Pendiente</span></div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-amber-100 border-amber-500"></div><span class="text-xs text-slate-700">Cursando</span></div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-emerald-100 border-emerald-500"></div><span class="text-xs text-slate-700">Aprobada</span></div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-blue-100 border-blue-500"></div><span class="text-xs text-slate-700">Adelantada</span></div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-red-100 border-psych-red"></div><span class="text-xs text-slate-700">Reprobada</span></div>
+    </footer>
 
-            return (
-                <div className="bg-gray-100 min-h-screen pb-20">
-                    <div className="bg-[#8B0000] text-white h-16 flex items-center px-6 shadow sticky top-0 z-50 justify-between">
-                        <button onClick={onBack} className="flex items-center gap-1 font-bold opacity-80 hover:opacity-100"><ArrowLeft size={18}/> Salir</button>
-                        <button onClick={submit} disabled={sending} className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-bold shadow flex items-center gap-2">
-                            {sending ? 'Enviando...' : <>Enviar <Send size={16}/></>}
-                        </button>
-                    </div>
+    <!-- MODAL DE DESCARGA -->
+    <div id="download-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+            <!-- Modal Header -->
+            <div class="bg-psych-blue p-4 flex items-center justify-between">
+                <h3 class="text-white font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="info" class="w-5 h-5"></i> Finalizar Proceso
+                </h3>
+                <button onclick="closeDownloadModal()" class="text-white/80 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div class="p-6">
+                <!-- PASO 1: GUARDAR DATOS -->
+                <div class="bg-blue-50 border-l-4 border-psych-blue p-4 rounded mb-6 shadow-sm">
+                    <h4 class="text-psych-blue font-bold text-sm mb-2 uppercase flex items-center gap-2">
+                        <span class="bg-psych-blue text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">1</span>
+                        Registrar Datos
+                    </h4>
+                    <p class="text-xs text-slate-600 mb-3">
+                        Antes de generar el PDF, por favor guarda tu reporte en nuestra base de datos para que sea válido.
+                    </p>
+                    <button id="btn-send-sheets" onclick="sendToGoogleSheets()" class="w-full flex justify-center items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors shadow-sm font-bold text-sm">
+                        <i data-lucide="sheet" class="w-4 h-4"></i> Guardar en Sheets
+                    </button>
+                </div>
+
+                <!-- PASO 2: DESCARGAR -->
+                <div class="border-t border-slate-200 pt-4">
+                     <h4 class="text-slate-700 font-bold text-sm mb-3 uppercase flex items-center gap-2">
+                        <span class="bg-slate-400 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">2</span>
+                        Descargar y Enviar
+                    </h4>
+                    <p class="text-slate-600 text-xs leading-relaxed mb-4">
+                        Descarga el PDF y envíalo a uno de los números encargados indicando tu <strong>Nombre Completo y Registro</strong>.
+                    </p>
                     
-                    <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
-                        <div className="bg-white rounded-lg shadow-lg border-t-8 border-[#8B0000] p-8">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">{form.settings.title}</h1>
-                            <p className="text-gray-600 whitespace-pre-wrap">{form.settings.description}</p>
-                        </div>
-
-                        {form.sections.map(s => (
-                            <div key={s.id} className="bg-white rounded-lg shadow overflow-hidden">
-                                <div className="bg-[#8B0000] text-white px-6 py-3 font-bold">{s.title}</div>
-                                <div className="p-6 space-y-8">
-                                    {s.questions.map(q => (
-                                        <div key={q.id} className="space-y-2">
-                                            <label className="block text-gray-800 font-bold">{q.text} {q.required && <span className="text-red-500">*</span>}</label>
-                                            {q.imageUrl && <img src={q.imageUrl} className="max-w-full h-auto rounded border mb-2 max-h-64 object-contain" />}
-                                            
-                                            {q.type === 'text' && <input className="w-full p-3 border rounded" onChange={e=>handleChange(q.id, e.target.value)} />}
-                                            {q.type === 'textarea' && <textarea className="w-full p-3 border rounded h-24" onChange={e=>handleChange(q.id, e.target.value)} />}
-                                            {q.type === 'number' && <input type="number" className="w-full p-3 border rounded" onChange={e=>handleChange(q.id, e.target.value)} />}
-                                            {q.type === 'select' && <select className="w-full p-3 border rounded bg-white" onChange={e=>handleChange(q.id, e.target.value)}><option value="">Seleccionar...</option>{q.options?.map(o=><option key={o} value={o}>{o}</option>)}</select>}
-                                            {q.type === 'radio' && <div className="space-y-2">{q.options?.map(o => <label key={o} className="flex items-center gap-2 cursor-pointer border p-2 rounded hover:bg-gray-50"><input type="radio" name={q.id} value={o} onChange={e=>handleChange(q.id, e.target.value)} /><span>{o}</span></label>)}</div>}
-                                            {q.type === 'checkbox' && <div className="space-y-2">{q.options?.map(o => <label key={o} className="flex items-center gap-2 cursor-pointer border p-2 rounded hover:bg-gray-50"><input type="checkbox" value={o} onChange={e => { const old = answers[q.id] || []; handleChange(q.id, e.target.checked ? [...old, o] : old.filter(x=>x!==o)); }} /><span>{o}</span></label>)}</div>}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
+                    <div class="space-y-2">
+                        <a href="https://wa.me/59160904656" target="_blank" class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:border-green-500 hover:bg-green-50 group transition-all">
+                            <span class="flex items-center gap-2 text-slate-700 text-xs font-medium group-hover:text-green-700">
+                                <i data-lucide="message-circle" class="w-4 h-4 text-green-600"></i> +591 60904656
+                            </span>
+                            <i data-lucide="external-link" class="w-3 h-3 text-slate-400 group-hover:text-green-600"></i>
+                        </a>
+                        <a href="https://wa.me/59162829160" target="_blank" class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:border-green-500 hover:bg-green-50 group transition-all">
+                            <span class="flex items-center gap-2 text-slate-700 text-xs font-medium group-hover:text-green-700">
+                                <i data-lucide="message-circle" class="w-4 h-4 text-green-600"></i> +591 62829160
+                            </span>
+                            <i data-lucide="external-link" class="w-3 h-3 text-slate-400 group-hover:text-green-600"></i>
+                        </a>
                     </div>
                 </div>
-            );
+            </div>
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-3">
+                <button onclick="closeDownloadModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors">
+                    Cancelar
+                </button>
+                <button onclick="confirmDownload()" class="px-4 py-2 text-sm font-bold text-white bg-psych-blue rounded hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-2">
+                    <i data-lucide="file-down" class="w-4 h-4"></i> Descargar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURACIÓN DE GOOGLE SHEETS
+        // ==========================================
+        const GOOGLE_SCRIPT_URL = "PEGAR_TU_URL_AQUI"; 
+        // ==========================================
+
+        const REQUIREMENTS = { TRONCALES_TOTAL: 59, ELECTIVES_NEEDED: 4, TALLERES_NEEDED: 4, TOTAL_SUBJECTS_DEGREE: 67, TOTAL_SEMESTERS: 10 };
+        const STATUS_TYPES = {
+            pending: { id: 'pending', label: 'Pendiente', color: 'bg-white border-slate-300 text-slate-600', printColor: 'text-gray-400', icon: 'clock' },
+            approved: { id: 'approved', label: 'Aprobada', color: 'bg-emerald-100 border-emerald-500 text-emerald-900', printColor: 'text-emerald-700 font-bold', icon: 'check-circle' },
+            curring: { id: 'curring', label: 'Cursando', color: 'bg-amber-100 border-amber-500 text-amber-900', printColor: 'text-amber-600 font-bold', icon: 'play-circle' },
+            advanced: { id: 'advanced', label: 'Adelantada', color: 'bg-blue-100 border-blue-500 text-blue-900', printColor: 'text-blue-600 font-bold', icon: 'fast-forward' },
+            failed: { id: 'failed', label: 'Reprobada', color: 'bg-red-50 border-psych-red text-psych-red', printColor: 'text-psych-red font-bold', icon: 'x-circle' },
         };
+        const STATUS_ORDER = ['pending', 'curring', 'approved', 'advanced', 'failed'];
+        
+        const semestersData = [
+            { id: 1, name: "1er Semestre", subjects: [{ id: "FIL-101", name: "Filosofía", type: "troncal" }, { id: "EST-121", name: "Estadística I", type: "troncal" }, { id: "CSO-101", name: "Sociología I", type: "troncal" }, { id: "ANT-100", name: "Antropología Cultural", type: "troncal" }, { id: "PSI-101", name: "Psicología I", type: "troncal" }, { id: "BIO-100", name: "Biopsicología", type: "troncal" }, { id: "DEP-112", name: "Estrategias de Aprendizaje", type: "troncal" }] },
+            { id: 2, name: "2do Semestre", subjects: [{ id: "FIL-150", name: "Epistemología", prereqs: ["FIL-101"], type: "troncal" }, { id: "EST-152", name: "Estadística II", prereqs: ["EST-121"], type: "troncal" }, { id: "CSO-150", name: "Sociología II", prereqs: ["CSO-101"], type: "troncal" }, { id: "ANT-150", name: "Antropología Cultural Boliviana", prereqs: ["ANT-100"], type: "troncal" }, { id: "PSI-150", name: "Psicología II", prereqs: ["PSI-101"], type: "troncal" }, { id: "BIO-150", name: "Psicofisiología", prereqs: ["BIO-100"], type: "troncal" }] },
+            { id: 3, name: "3er Semestre", subjects: [{ id: "INV-200", name: "Investigación I", prereqs: ["EST-152", "FIL-150"], type: "troncal" }, { id: "CSO-200", name: "Psicología Social", prereqs: ["CSO-150"], type: "troncal" }, { id: "CSO-201", name: "Psicología Etnoecológica", prereqs: ["ANT-150"], type: "troncal" }, { id: "PSI-200", name: "Desarrollo Humano I", prereqs: ["PSI-150"], type: "troncal" }, { id: "PSI-203", name: "Teorías y Sistemas I", prereqs: ["PSI-150"], type: "troncal" }, { id: "BIO-200", name: "Neuropsicología I", prereqs: ["BIO-150"], type: "troncal" }, { id: "PSI-202", name: "Aprendizaje", prereqs: ["PSI-150", "BIO-150"], type: "troncal" }] },
+            { id: 4, name: "4to Semestre", subjects: [{ id: "INV-250", name: "Investigación II", prereqs: ["INV-200"], type: "troncal" }, { id: "CSO-250", name: "Psicología Grupal y Organizacional", prereqs: ["CSO-200"], type: "troncal" }, { id: "PSI-254", name: "Desarrollo Humano II", prereqs: ["PSI-200"], type: "troncal" }, { id: "PSI-256", name: "Teorías y Sistemas II", prereqs: ["PSI-202", "PSI-203"], type: "troncal" }, { id: "BIO-250", name: "Neuropsicología II", prereqs: ["BIO-200"], type: "troncal" }, { id: "PSI-255", name: "Etología", prereqs: ["PSI-202"], type: "troncal" }] },
+            { id: 5, name: "5to Semestre", subjects: [{ id: "INV-300", name: "Investigación III", prereqs: ["INV-250"], type: "troncal" }, { id: "CSO-300", name: "Comportamiento y Sociedad", prereqs: ["CSO-250"], type: "troncal" }, { id: "PSI-310", name: "Psicología de la Personalidad I", prereqs: ["PSI-254"], type: "troncal" }, { id: "PSI-311", name: "Evaluación Psicológica I", prereqs: ["PSI-254"], type: "troncal" }, { id: "PSI-313", name: "Psicopatología I", prereqs: ["PSI-254", "BIO-250"], type: "troncal" }, { id: "PSI-312", name: "Psicología Cognitiva I", prereqs: ["PSI-256"], type: "troncal" }] },
+            { id: 6, name: "6to Semestre", subjects: [{ id: "INV-350", name: "Investigación IV", prereqs: ["INV-300"], type: "troncal" }, { id: "CSO-350", name: "Diagnóstico de Necesidades", prereqs: ["CSO-300"], type: "troncal" }, { id: "PSI-350", name: "Psicología de la Personalidad II", prereqs: ["PSI-310"], type: "troncal" }, { id: "PSI-351", name: "Evaluación Psicológica II", prereqs: ["PSI-311"], type: "troncal" }, { id: "PSI-354", name: "Psicopatología II", prereqs: ["PSI-313"], type: "troncal" }, { id: "PSI-353", name: "Psicoanálisis", prereqs: ["PSI-256", "PSI-310"], type: "troncal" }, { id: "PSI-352", name: "Psicología Cognitiva II", prereqs: ["PSI-312"], type: "troncal" }] },
+            { id: 7, name: "7mo Semestre", subjects: [{ id: "INV-400", name: "Investigación V", prereqs: ["INV-350"], type: "troncal" }, { id: "CSO-400", name: "Proyectos I", prereqs: ["CSO-350"], type: "troncal" }, { id: "CSO-401", name: "Téc. de Int. Socio-Organizacional I", prereqs: ["CSO-201", "CSO-350"], type: "troncal" }, { id: "PSI-401", name: "Técnicas Proyectivas", prereqs: ["PSI-351", "PSI-353"], type: "troncal" }, { id: "PSI-400", name: "Téc. de Int. Clínica I", prereqs: ["PSI-350", "PSI-354"], type: "troncal" }, { id: "PSI-402", name: "Téc. de Int. Educativa I", prereqs: ["PSI-352"], type: "troncal" }] },
+            { id: 8, name: "8vo Semestre", subjects: [{ id: "INV-450", name: "Investigación VI", prereqs: ["INV-400"], type: "troncal" }, { id: "CSO-450", name: "Proyectos II", prereqs: ["CSO-400"], type: "troncal" }, { id: "CSO-451", name: "Téc. de Int. Socio-Organizacional II", prereqs: ["CSO-401"], type: "troncal" }, { id: "PSI-451", name: "Psicodiagnóstico", prereqs: ["PSI-401"], type: "troncal" }, { id: "PSI-450", name: "Téc. de Int. Clínica II", prereqs: ["PSI-400"], type: "troncal" }, { id: "PSI-452", name: "Téc. de Int. Educativa II", prereqs: ["PSI-402"], type: "troncal" }] },
+            { id: 9, name: "9no Semestre (MODs)", subjects: [{ id: "DEP-500", name: "Ética Profesional I", prereqs: ["PSI-451"], type: "troncal" }, { id: "HUM-CLI-1", name: "Abordaje Clínica I Humanista", prereqs: ["PSI-450"], type: "mod-hum" }, { id: "HUM-EDU-1", name: "Abordaje Educativo I Humanista", prereqs: ["PSI-452"], type: "mod-hum" }, { id: "HUM-SOC-1", name: "Abordaje Socio-Org. I Humanista", prereqs: ["CSO-451"], type: "mod-hum" }, { id: "COG-CLI-1", name: "Abordaje Clínica I Cognitivo Conductual", prereqs: ["PSI-450"], type: "mod-cc" }, { id: "COG-EDU-1", name: "Abordaje Educativo I Cognitivo Conductual", prereqs: ["PSI-452"], type: "mod-cc" }, { id: "COG-SOC-1", name: "Abordaje Socio-Org. I Cognitivo Conductual", prereqs: ["CSO-451"], type: "mod-cc" }, { id: "AMB-AMB-1", name: "Psicología Ambiental I (Ambiental Comunitario)", prereqs: ["CSO-451"], type: "mod-amb" }, { id: "AMB-COM-1", name: "Psicología Comunitaria I (Ambiental Comunitario)", prereqs: ["PSI-451"], type: "mod-amb" }, { id: "AMB-ORG-1", name: "Psicología de las Organizaciones I (Ambiental Comunitario)", prereqs: ["PSI-451"], type: "mod-amb" }, { id: "PSA-CLI-1", name: "Abordaje Clínica I Psicoanalítico", prereqs: ["PSI-450"], type: "mod-psa" }, { id: "PSA-EDU-1", name: "Abordaje Educativo I Psicoanalítico", prereqs: ["PSI-452"], type: "mod-psa" }, { id: "PSA-SOC-1", name: "Abordaje Socio-Org. I Psicoanalítico", prereqs: ["CSO-451"], type: "mod-psa" }] },
+            { id: 10, name: "10mo Semestre (MODs)", subjects: [{ id: "DEP-501", name: "Ética Profesional II", prereqs: ["DEP-500"], type: "troncal" }, { id: "HUM-CLI-2", name: "Abordaje Clínica II Humanista", prereqs: ["HUM-CLI-1"], type: "mod-hum" }, { id: "HUM-EDU-2", name: "Abordaje Educativo II Humanista", prereqs: ["HUM-EDU-1"], type: "mod-hum" }, { id: "HUM-SOC-2", name: "Abordaje Socio-Org. II Humanista", prereqs: ["HUM-SOC-1"], type: "mod-hum" }, { id: "COG-CLI-2", name: "Abordaje Clínica II Cognitivo Conductual", prereqs: ["COG-CLI-1"], type: "mod-cc" }, { id: "COG-EDU-2", name: "Abordaje Educativo II Cognitivo Conductual", prereqs: ["COG-EDU-1"], type: "mod-cc" }, { id: "COG-SOC-2", name: "Abordaje Socio-Org. II Cognitivo Conductual", prereqs: ["COG-SOC-1"], type: "mod-cc" }, { id: "AMB-AMB-2", name: "Psicología Ambiental II (Ambiental Comunitario)", prereqs: ["AMB-AMB-1"], type: "mod-amb" }, { id: "AMB-COM-2", name: "Psicología Comunitaria II (Ambiental Comunitario)", prereqs: ["AMB-COM-1"], type: "mod-amb" }, { id: "AMB-ORG-2", name: "Psicología de las Organizaciones II (Ambiental Comunitario)", prereqs: ["AMB-ORG-1"], type: "mod-amb" }, { id: "PSA-CLI-2", name: "Abordaje Clínica II Psicoanalítico", prereqs: ["PSA-CLI-1"], type: "mod-psa" }, { id: "PSA-EDU-2", name: "Abordaje Educativo II Psicoanalítico", prereqs: ["PSA-EDU-1"], type: "mod-psa" }, { id: "PSA-SOC-2", name: "Abordaje Socio-Org. II Psicoanalítico", prereqs: ["PSA-SOC-1"], type: "mod-psa" }] },
+            { id: 11, name: "Electivas (4 Requeridas)", subjects: [{ id: "ELE-GRU-1", name: "Grupo Relacional I", type: "electiva" }, { id: "ELE-GRU-2", name: "Grupo Relacional II", prereqs: ["ELE-GRU-1"], type: "electiva" }, { id: "ELE-COM-1", name: "Computación I", type: "electiva" }, { id: "ELE-COM-2", name: "Computación II", prereqs: ["ELE-COM-1"], type: "electiva" }, { id: "ELE-REC", name: "Técnicas Recreacionales", type: "electiva" }, { id: "ELE-NAT-1", name: "Lengua Nativa I", type: "electiva" }, { id: "ELE-NAT-2", name: "Lengua Nativa II", prereqs: ["ELE-NAT-1"], type: "electiva" }, { id: "ELE-NAT-3", name: "Lengua Nativa III", prereqs: ["ELE-NAT-2"], type: "electiva" }, { id: "ELE-NAT-4", name: "Lengua Nativa IV", prereqs: ["ELE-NAT-3"], type: "electiva" }, { id: "ELE-ING-1", name: "Idioma Inglés I", type: "electiva" }, { id: "ELE-ING-2", name: "Idioma Inglés II", prereqs: ["ELE-ING-1"], type: "electiva" }] },
+            { id: 12, name: "Talleres (4 Requeridos)", subjects: [{ id: "TAL-MOV", name: "Movimientos Indígenas", prereqs: ["ANT-150"], type: "taller" }, { id: "TAL-TER", name: "Territorios Pueblos IND.", prereqs: ["ANT-150"], type: "taller" }, { id: "TAL-REL", name: "Relac. Interétnicas", prereqs: ["ANT-150"], type: "taller" }, { id: "TAL-IDE", name: "Identidad y Culturas", prereqs: ["CSO-300"], type: "taller" }, { id: "TAL-INF", name: "Soc. Infancia y Juv.", prereqs: ["PSI-254"], type: "taller" }, { id: "TAL-TRA", name: "Soc. Organización y Trabajo", prereqs: ["CSO-250"], type: "taller" }, { id: "TAL-MIG", name: "Soc. Migraciones", prereqs: ["CSO-150"], type: "taller" }, { id: "TAL-DEL", name: "Delito y Sociedad", prereqs: ["CSO-300"], type: "taller" }, { id: "TAL-PSA", name: "Clínica Psicoanalítica", prereqs: ["PSI-353"], type: "taller" }, { id: "TAL-ADO", name: "Psicoanálisis Adolescentes", prereqs: ["PSI-353"], type: "taller" }, { id: "TAL-PSI", name: "Psicosomática", prereqs: ["BIO-250"], type: "taller" }, { id: "TAL-NIN", name: "Psicoanálisis Niños", prereqs: ["PSI-353"], type: "taller" }, { id: "TAL-SAL", name: "Salud Mental Com.", prereqs: ["PSI-354"], type: "taller" }, { id: "TAL-COM", name: "Psicología de la Comunicación", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-CON", name: "Técnicas Conciliación", prereqs: ["CSO-401"], type: "taller" }, { id: "TAL-ROG", name: "Terapia Rogeriana", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-DRA", name: "Psicodrama", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-POS", name: "Psicología Positiva", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-DIF", name: "Dificultades Aprendizaje", prereqs: ["PSI-202"], type: "taller" }, { id: "TAL-FAR", name: "Psicofarmacología", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-HIG", name: "Psicohigiene", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-VOC", name: "Orientación Vocacional", prereqs: ["PSI-402"], type: "taller" }, { id: "TAL-SEX", name: "Psicología de la Sexualidad", prereqs: ["PSI-313"], type: "taller" }, { id: "TAL-ORG", name: "Psicología Organizacional", prereqs: ["CSO-250"], type: "taller" }, { id: "TAL-ESP", name: "Educación Especial", prereqs: ["PSI-402"], type: "taller" }, { id: "TAL-DEP", name: "Psicología del Deporte", prereqs: ["BIO-100"], type: "taller" }, { id: "TAL-SOC", name: "Sociología de la Salud", prereqs: ["CSO-150"], type: "taller" }, { id: "TAL-GEN", name: "Género y Desarrollo", prereqs: ["CSO-200"], type: "taller" }, { id: "TAL-CFL", name: "Teoría Conflicto Social", prereqs: ["CSO-200"], type: "taller" }, { id: "TAL-ECO", name: "Ecología Social", prereqs: ["CSO-201"], type: "taller" }] }
+        ];
 
-        const App = () => {
-            const [view, setView] = useState('home');
-            const [activeForm, setActiveForm] = useState(null);
-            const [forms, setForms] = useState([]);
-            const [loading, setLoading] = useState(false);
+        let subjectStates = {};
+        let hoveredSubject = null;
 
-            useEffect(() => {
-                setLoading(true);
-                api('getFormsList', { onlyPublic: true }).then(d => { setForms(Array.isArray(d)?d:[]); setLoading(false); }).catch(()=>setLoading(false));
-            }, []);
+        function init() {
+            semestersData.forEach(sem => sem.subjects.forEach(sub => subjectStates[sub.id] = 'pending'));
+            renderMap();
+            updateLines();
+            renderReportList();
+            safeSetText('report-date', new Date().toLocaleDateString());
+            updateStats();
+            lucide.createIcons();
+            window.addEventListener('resize', updateLines);
+        }
 
-            const openForm = (id) => {
-                setLoading(true);
-                api('getFormConfig', { formId: id }).then(d => { setActiveForm(d); setView('student'); setLoading(false); }).catch(e => { alert(e.message); setLoading(false); });
+        // --- Helper Seguro para asignar texto ---
+        function safeSetText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
+        function renderMap() {
+            const container = document.getElementById('semesters-container');
+            container.innerHTML = '';
+            semestersData.forEach(sem => {
+                const col = document.createElement('div');
+                col.className = 'flex flex-col w-56 gap-4';
+                col.innerHTML = `
+                    <div class="text-center py-2 bg-psych-blue text-white rounded-t-lg font-bold shadow-md sticky top-0 z-20">
+                        ${sem.name}
+                        ${sem.id === 11 ? `<div class="text-[10px] font-normal opacity-80 mt-1" id="map-header-ele">0/4 Completadas</div>` : ''}
+                        ${sem.id === 12 ? `<div class="text-[10px] font-normal opacity-80 mt-1" id="map-header-tal">0/4 Completados</div>` : ''}
+                    </div>
+                `;
+                const subjectsContainer = document.createElement('div');
+                subjectsContainer.className = 'flex flex-col gap-6 pt-4';
+                sem.subjects.forEach(sub => {
+                    const card = document.createElement('div');
+                    card.id = `subject-${sub.id}`;
+                    card.className = getCardClasses(sub.id, sub.type);
+                    card.onclick = () => toggleSubject(sub.id);
+                    card.onmouseenter = () => handleMouseEnter(sub.id);
+                    card.onmouseleave = () => handleMouseLeave();
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-1 pointer-events-none">
+                            <span class="text-[9px] font-bold opacity-60 bg-gray-200 px-1 rounded text-slate-700">${sub.id}</span>
+                            <i data-lucide="${STATUS_TYPES['pending'].icon}" class="w-3.5 h-3.5 icon-status"></i>
+                        </div>
+                        <h3 class="text-xs font-bold leading-tight min-h-[40px] flex items-center pointer-events-none">${sub.name}</h3>
+                        <div class="mt-1 flex justify-end pointer-events-none">
+                            <span class="text-[9px] px-2 py-0.5 rounded-full border ${getTypeStyle(sub.type)}">${getTypeLabel(sub.type)}</span>
+                        </div>
+                    `;
+                    subjectsContainer.appendChild(card);
+                });
+                col.appendChild(subjectsContainer);
+                container.appendChild(col);
+            });
+        }
+
+        function renderReportList() {
+            const container = document.getElementById('report-semesters-list');
+            container.innerHTML = '';
+            semestersData.forEach(sem => {
+                const block = document.createElement('div');
+                block.className = 'break-inside-avoid';
+                let extraInfo = '';
+                if(sem.id === 11) extraInfo = `<span class="text-xs font-normal text-slate-500" id="rep-header-ele">Completado: 0/4</span>`;
+                if(sem.id === 12) extraInfo = `<span class="text-xs font-normal text-slate-500" id="rep-header-tal">Completado: 0/4</span>`;
+                block.innerHTML = `
+                    <h3 class="text-sm font-bold bg-slate-100 text-psych-blue py-1 px-3 mb-2 border-l-4 border-psych-blue uppercase print:bg-slate-200 flex justify-between">
+                        <span>${sem.name}</span>
+                        ${extraInfo}
+                    </h3>
+                `;
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1';
+                sem.subjects.forEach(sub => {
+                    const row = document.createElement('div');
+                    row.id = `rep-subject-${sub.id}`;
+                    row.className = 'flex justify-between items-center text-xs py-1 border-b border-slate-100 print:border-slate-200';
+                    grid.appendChild(row);
+                });
+                block.appendChild(grid);
+                container.appendChild(block);
+            });
+            updateReportUI();
+        }
+
+        function toggleSubject(id) {
+            const current = subjectStates[id];
+            const nextIdx = (STATUS_ORDER.indexOf(current) + 1) % STATUS_ORDER.length;
+            subjectStates[id] = STATUS_ORDER[nextIdx];
+            updateCardUI(id);
+            updateStats();
+            updateReportUI();
+        }
+        
+        function handleMouseEnter(id) {
+            hoveredSubject = id;
+            updateOpacity();
+            updateLinesOpacity();
+        }
+        
+        function handleMouseLeave() {
+            hoveredSubject = null;
+            updateOpacity();
+            updateLinesOpacity();
+        }
+
+        function updateCardUI(id) {
+            const el = document.getElementById(`subject-${id}`);
+            const sub = getSubjectById(id);
+            if(el) {
+                el.className = getCardClasses(id, sub.type);
+                const status = subjectStates[id];
+                const iconName = STATUS_TYPES[status].icon;
+                const iconContainer = el.querySelector('.icon-status');
+                if(iconContainer) {
+                    const newIcon = document.createElement('i');
+                    newIcon.setAttribute('data-lucide', iconName);
+                    // Adjust icons color
+                    const iconColor = status === 'approved' ? 'text-emerald-600' : status === 'failed' ? 'text-psych-red' : status === 'advanced' ? 'text-blue-600' : 'text-slate-400';
+                    newIcon.className = `w-3.5 h-3.5 icon-status ${iconColor}`;
+                    iconContainer.replaceWith(newIcon);
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        function updateReportUI() {
+            semestersData.forEach(sem => {
+                sem.subjects.forEach(sub => {
+                    const row = document.getElementById(`rep-subject-${sub.id}`);
+                    if(row) {
+                        const status = subjectStates[sub.id];
+                        const config = STATUS_TYPES[status];
+                        const iconColor = status === 'approved' ? 'text-emerald-600' : status === 'failed' ? 'text-psych-red' : status === 'advanced' ? 'text-blue-600' : status === 'curring' ? 'text-amber-600' : 'text-slate-300';
+                        const iconHtml = status !== 'pending' ? `<i data-lucide="${config.icon}" class="w-3 h-3 ${iconColor}"></i>` : '';
+                        row.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-slate-400 w-16">${sub.id}</span>
+                                <span class="font-medium ${status !== 'pending' ? 'text-slate-900' : 'text-slate-500'}">${sub.name}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="${config.printColor} font-semibold uppercase text-[10px]">${config.label}</span>
+                                ${iconHtml}
+                            </div>
+                        `;
+                    }
+                });
+            });
+            lucide.createIcons();
+        }
+
+        function getCardClasses(id, type) {
+            const status = subjectStates[id] || 'pending';
+            const config = STATUS_TYPES[status];
+            let classes = `relative p-3 rounded-lg border cursor-pointer shadow-sm transition-all duration-200 ${config.color} z-10`;
+            // If default pending, add stronger border or shadow? No, keep clean.
+            return classes;
+        }
+
+        function updateOpacity() {
+            semestersData.forEach(sem => {
+                sem.subjects.forEach(sub => {
+                    const el = document.getElementById(`subject-${sub.id}`);
+                    if(!el) return;
+                    if (!hoveredSubject) {
+                        el.style.opacity = '1';
+                        el.classList.remove('blur-[1px]', 'scale-110', 'shadow-xl', 'ring-2', 'ring-psych-red', 'z-50', 'border-psych-red');
+                        el.classList.add('z-10');
+                        return;
+                    }
+                    const isHovered = hoveredSubject === sub.id;
+                    const isRelated = isConnected(hoveredSubject, sub.id);
+                    if (isHovered) {
+                        el.style.opacity = '1';
+                        el.classList.add('scale-110', 'shadow-xl', 'ring-2', 'ring-psych-red', 'z-50');
+                        el.classList.remove('blur-[1px]', 'z-10');
+                    } else if (isRelated) {
+                        el.style.opacity = '1';
+                        el.classList.remove('blur-[1px]', 'scale-110', 'shadow-xl', 'ring-2', 'ring-psych-red', 'z-50');
+                         el.classList.add('z-10');
+                    } else {
+                        el.style.opacity = '0.3';
+                        el.classList.add('blur-[1px]');
+                        el.classList.remove('scale-110', 'shadow-xl', 'ring-2', 'ring-psych-red', 'z-50');
+                        el.classList.add('z-10');
+                    }
+                });
+            });
+        }
+
+        function updateLines() {
+            const container = document.getElementById('view-map');
+            const svg = document.getElementById('connections-layer');
+            svg.innerHTML = `
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" /></marker>
+                    <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#002855" /></marker>
+                </defs>
+            `;
+            const parentRect = svg.parentElement.getBoundingClientRect();
+            semestersData.forEach(sem => {
+                sem.subjects.forEach(sub => {
+                    if (sub.prereqs) {
+                        sub.prereqs.forEach(preId => {
+                            const startEl = document.getElementById(`subject-${preId}`);
+                            const endEl = document.getElementById(`subject-${sub.id}`);
+                            if (startEl && endEl) {
+                                const startRect = startEl.getBoundingClientRect();
+                                const endRect = endEl.getBoundingClientRect();
+                                const startX = startRect.right - parentRect.left;
+                                const startY = startRect.top + (startRect.height/2) - parentRect.top;
+                                const endX = endRect.left - parentRect.left;
+                                const endY = endRect.top + (endRect.height/2) - parentRect.top;
+                                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                                const d = `M ${startX} ${startY} C ${startX + 60} ${startY}, ${endX - 60} ${endY}, ${endX} ${endY}`;
+                                path.setAttribute("d", d);
+                                path.setAttribute("stroke", "#002855"); // Azul Institucional
+                                path.setAttribute("stroke-width", "3");
+                                path.setAttribute("fill", "none");
+                                path.setAttribute("marker-end", "url(#arrowhead-active)");
+                                path.setAttribute("class", "transition-opacity duration-300 opacity-0");
+                                path.setAttribute("data-from", preId);
+                                path.setAttribute("data-to", sub.id);
+                                svg.appendChild(path);
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        function updateLinesOpacity() {
+            const paths = document.querySelectorAll('#connections-layer path');
+            paths.forEach(path => {
+                if (!hoveredSubject) {
+                    path.classList.replace('opacity-100', 'opacity-0');
+                    return;
+                }
+                const from = path.getAttribute("data-from");
+                const to = path.getAttribute("data-to");
+                if (from === hoveredSubject || to === hoveredSubject) {
+                    path.classList.replace('opacity-0', 'opacity-100');
+                } else {
+                    path.classList.replace('opacity-100', 'opacity-0');
+                }
+            });
+        }
+
+        function updateStats() {
+            let approvedTroncales = 0;
+            let approvedElectives = 0;
+            let approvedTalleres = 0;
+            let curringCount = 0;
+            let advancedCount = 0;
+            let failedCount = 0;
+            let maxSemester = 0;
+
+            Object.keys(subjectStates).forEach(id => {
+                const status = subjectStates[id];
+                const sub = getSubjectById(id);
+                
+                if(status === 'curring') curringCount++;
+                if(status === 'advanced') advancedCount++;
+                if(status === 'failed') failedCount++;
+                
+                if (status === 'approved' || status === 'advanced') {
+                     if (sub.type === 'troncal' || sub.type.startsWith('mod-')) {
+                         approvedTroncales++;
+                         const semId = getSemesterOfSubject(id);
+                         if (semId > maxSemester) maxSemester = semId;
+                     }
+                     else if (sub.type === 'electiva') approvedElectives++;
+                     else if (sub.type === 'taller') approvedTalleres++;
+                }
+            });
+
+            // 1. Calcular deudas específicas en semestres INFERIORES o IGUALES al máximo alcanzado
+            let debtSemesters = [];
+            let levelingDebtCount = 0;
+            
+            if (maxSemester > 0) {
+                semestersData.forEach(sem => {
+                    // Verificamos si es un semestre troncal/MOD (ids <= 10) y si es menor o igual al maxSemester
+                    if (sem.id <= 10 && sem.id <= maxSemester) {
+                        let hasPendingInThisSemester = false;
+                        
+                        sem.subjects.forEach(sub => {
+                            const status = subjectStates[sub.id];
+                            // Si NO está aprobada/adelantada, es deuda
+                            if (status !== 'approved' && status !== 'advanced') {
+                                levelingDebtCount++;
+                                hasPendingInThisSemester = true;
+                            }
+                        });
+                        
+                        if (hasPendingInThisSemester) {
+                            debtSemesters.push(sem.id);
+                        }
+                    }
+                });
+            }
+            
+            const effElectives = Math.min(approvedElectives, REQUIREMENTS.ELECTIVES_NEEDED);
+            const effTalleres = Math.min(approvedTalleres, REQUIREMENTS.TALLERES_NEEDED);
+            const totalEff = approvedTroncales + effElectives + effTalleres;
+            
+            const pending = Math.max(0, REQUIREMENTS.TOTAL_SUBJECTS_DEGREE - totalEff);
+            const progress = Math.round((totalEff / REQUIREMENTS.TOTAL_SUBJECTS_DEGREE) * 100);
+            
+            safeSetText('stat-progress', `${Math.min(progress, 100)}%`);
+            safeSetText('stat-approved', totalEff);
+            safeSetText('stat-pending', pending);
+            safeSetText('stat-curring', curringCount);
+            safeSetText('stat-advanced', advancedCount);
+            safeSetText('stat-failed', failedCount);
+            
+            // Nivel Actual = Semestre de la materia más alta aprobada
+            const maxSemText = maxSemester > 0 ? `${maxSemester}º Sem` : '-';
+            safeSetText('stat-max-semester', maxSemText);
+
+            // Actualizar texto de Nivelación/Deuda
+            const debtStatusEl = document.getElementById('stat-leveling-status');
+            const debtDetailEl = document.getElementById('stat-leveling-container');
+            
+            if (debtStatusEl) {
+                // Limpiar
+                debtDetailEl.innerHTML = '';
+                debtDetailEl.appendChild(debtStatusEl);
+
+                if (maxSemester === 0) {
+                     debtStatusEl.textContent = 'Iniciando';
+                     debtStatusEl.className = "text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full inline-block self-center bg-gray-100 text-gray-500";
+                } else if (debtSemesters.length === 0) {
+                     debtStatusEl.textContent = '¡Estás nivelado!';
+                     debtStatusEl.className = "text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full inline-block self-center bg-emerald-100 text-emerald-600";
+                } else {
+                     // Formatear texto de semestres pendientes (ej: "3º, 4º y 5º")
+                     let debtText = "";
+                     if (debtSemesters.length === 1) {
+                         debtText = `${debtSemesters[0]}º`;
+                     } else {
+                         const last = debtSemesters.pop();
+                         debtText = debtSemesters.join('º, ') + 'º y ' + last + 'º';
+                     }
+                     
+                     debtStatusEl.textContent = `Tiene materias pendientes de: ${debtText}`;
+                     debtStatusEl.className = "text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full inline-block self-center bg-red-100 text-psych-red text-center"; // added text-center
+                }
+            }
+
+            const txtEle = `${effElectives}/4`;
+            const txtTal = `${effTalleres}/4`;
+            
+            safeSetText('map-header-ele', `${txtEle} Completadas`);
+            safeSetText('map-header-tal', `${txtTal} Completados`);
+            safeSetText('rep-header-ele', `Completado: ${txtEle} Completadas`);
+            safeSetText('rep-header-tal', `Completado: ${txtTal} Completados`);
+            
+            updateDots('dots-electivas', approvedElectives, 4, 'bg-purple-500');
+            updateDots('dots-talleres', approvedTalleres, 4, 'bg-orange-500');
+            safeSetText('text-electivas', txtEle);
+            safeSetText('text-talleres', txtTal);
+        }
+        
+        function updateDots(containerId, count, max, colorClass) {
+            const container = document.getElementById(containerId);
+            if (!container) return; // Safety check
+            container.innerHTML = '';
+            for(let i=1; i<=max; i++) {
+                const dot = document.createElement('div');
+                dot.className = `w-3 h-3 rounded-full ${i <= count ? colorClass : 'bg-slate-200'} print:border print:border-slate-300 ${i<=count?'print:bg-slate-800':''}`;
+                container.appendChild(dot);
+            }
+        }
+
+        function dismissInstructions() {
+            const el = document.getElementById('map-instructions');
+            if (el) el.style.display = 'none';
+        }
+
+        function switchView(mode) {
+            const map = document.getElementById('view-map');
+            const rep = document.getElementById('view-report');
+            const btnBack = document.getElementById('btn-back');
+            const inputName = document.getElementById('quick-name');
+            const ctrlMap = document.getElementById('controls-map');
+            const ctrlRep = document.getElementById('controls-report');
+            const footer = document.getElementById('footer-legend');
+            
+            // Instrucciones
+            const instr = document.getElementById('map-instructions');
+            
+            if (mode === 'map') {
+                map.classList.remove('hidden');
+                rep.classList.add('hidden');
+                btnBack.classList.add('hidden');
+                inputName.classList.remove('hidden');
+                ctrlMap.classList.remove('hidden');
+                ctrlRep.classList.add('hidden');
+                footer.classList.remove('hidden');
+                
+                // Mostrar instrucciones si no han sido cerradas manualmente (esto reinicia su visualización al volver al mapa)
+                if(instr) instr.style.display = 'block';
+
+                setTimeout(updateLines, 100);
+            } else {
+                map.classList.add('hidden');
+                rep.classList.remove('hidden');
+                btnBack.classList.remove('hidden');
+                inputName.classList.add('hidden');
+                ctrlMap.classList.add('hidden');
+                ctrlRep.classList.remove('hidden');
+                footer.classList.add('hidden');
+                
+                // Ocultar instrucciones en vista reporte
+                if(instr) instr.style.display = 'none';
+            }
+        }
+        
+        function syncInputs(val, field) {
+            if(field === 'name') {
+                document.getElementById('quick-name').value = val;
+                document.getElementById('input-name').value = val;
+            }
+        }
+        
+        function downloadJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(subjectStates));
+            const name = document.getElementById('input-name').value || 'estudiante';
+            const node = document.createElement('a');
+            node.setAttribute("href", dataStr);
+            node.setAttribute("download", `malla_psicologia_${name}.json`);
+            document.body.appendChild(node);
+            node.click();
+            node.remove();
+        }
+
+        function getSubjectById(id) {
+            for(let s of semestersData) {
+                const sub = s.subjects.find(x => x.id === id);
+                if(sub) return sub;
+            }
+            return null;
+        }
+
+        function getSemesterOfSubject(id) {
+            for(let s of semestersData) {
+                if (s.subjects.find(x => x.id === id)) return s.id;
+            }
+            return 0;
+        }
+
+        function isConnected(id1, id2) {
+            const s1 = getSubjectById(id1);
+            const s2 = getSubjectById(id2);
+            if(s1 && s1.prereqs && s1.prereqs.includes(id2)) return true;
+            if(s2 && s2.prereqs && s2.prereqs.includes(id1)) return true;
+            return false;
+        }
+        
+        function getTypeStyle(type) {
+            switch (type) {
+                case 'electiva': return 'bg-purple-200 text-purple-900 border-purple-300';
+                case 'taller': return 'bg-orange-200 text-orange-900 border-orange-300';
+                case 'mod-hum': return 'bg-pink-200 text-pink-900 border-pink-300'; 
+                case 'mod-cc': return 'bg-cyan-200 text-cyan-900 border-cyan-300'; 
+                case 'mod-amb': return 'bg-lime-200 text-lime-900 border-lime-300'; 
+                case 'mod-psa': return 'bg-fuchsia-200 text-fuchsia-900 border-fuchsia-300'; 
+                default: return 'bg-slate-50 text-slate-700 border-slate-200';
+            }
+        }
+        function getTypeLabel(type) {
+            if (type.startsWith('mod-')) return 'MOD';
+            if (type === 'electiva') return 'Electiva';
+            if (type === 'taller') return 'Taller';
+            return 'Troncal';
+        }
+
+        // --- Nuevas Funciones para el Formulario ---
+        function toggleDepende(select) {
+            const input = document.getElementById('dep-13');
+            if (select.value === 'Depende') {
+                input.classList.remove('hidden');
+                input.focus();
+            } else {
+                input.classList.add('hidden');
+            }
+        }
+
+        function toggleOtro(select, id) {
+            const input = document.getElementById(id);
+            if (select.value === 'Otro') {
+                input.classList.remove('hidden');
+                input.focus();
+            } else {
+                input.classList.add('hidden');
+            }
+        }
+
+        // --- Nuevas Funciones para el Modal ---
+        function showDownloadModal() {
+            document.getElementById('download-modal').classList.remove('hidden');
+        }
+
+        function closeDownloadModal() {
+            document.getElementById('download-modal').classList.add('hidden');
+        }
+
+        function confirmDownload() {
+            closeDownloadModal();
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        }
+
+        // --- FUNCIÓN PARA ENVIAR DATOS A GOOGLE SHEETS ---
+        function sendToGoogleSheets() {
+            const btn = document.getElementById('btn-send-sheets');
+            const originalText = btn.innerHTML;
+            
+            if (GOOGLE_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbxgejJxR6gL8coGxPwH2OBd2FYyCxp0YYvyb-Q3muo7XjDrM_DXDD-fEuYLNQ-LAldy/exec" || GOOGLE_SCRIPT_URL === "") {
+                alert("Error: Debes configurar la URL de tu Google Script en el código HTML antes de enviar.");
+                return;
+            }
+
+            // Cambiar estado botón
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...`;
+            lucide.createIcons();
+            btn.disabled = true;
+
+            // Recopilar Datos de la Encuesta (Checkbox Logic)
+            const q18Checked = [];
+            const checkboxes = document.querySelectorAll('#survey-q18-container input[type="checkbox"]:checked');
+            checkboxes.forEach(chk => {
+                if(chk.value === 'Otro') {
+                    const otherText = document.getElementById('q18-other-text').value;
+                    q18Checked.push(`Otro: ${otherText}`);
+                } else {
+                    q18Checked.push(chk.value);
+                }
+            });
+
+            // Recopilar Q13 y Q17 con lógica condicional
+            let q13Val = document.getElementById('survey-q13') ? document.getElementById('survey-q13').value : "";
+            if (q13Val === "Depende") q13Val += ": " + document.getElementById('dep-13').value;
+
+            let q17Val = document.getElementById('survey-q17') ? document.getElementById('survey-q17').value : "";
+            if (q17Val === "Otro") q17Val += ": " + document.getElementById('other-17').value;
+
+            const payload = {
+                // Datos Personales
+                nombre: document.getElementById('input-name').value,
+                registro: document.getElementById('input-registry').value,
+                celular: document.getElementById('input-phone').value,
+                correo: document.getElementById('input-email').value,
+                
+                // Estadísticas
+                nivel: document.getElementById('stat-max-semester').innerText,
+                avance: document.getElementById('stat-progress').innerText,
+                aprobadas: document.getElementById('stat-approved').innerText,
+                pendientes: document.getElementById('stat-pending').innerText,
+                reprobadas: document.getElementById('stat-failed').innerText,
+                
+                // Encuesta
+                q6_carga: document.getElementById('survey-q6') ? document.getElementById('survey-q6').value : "",
+                q7_trabaja: document.getElementById('survey-q7') ? document.getElementById('survey-q7').value : "",
+                q8_horas: document.getElementById('survey-q8') ? document.getElementById('survey-q8').value : "",
+                q9_estado: document.getElementById('survey-q9') ? document.getElementById('survey-q9').value : "",
+                q13_afectacion: q13Val,
+                q16_sentimiento: document.getElementById('survey-q16') ? document.getElementById('survey-q16').value : "",
+                q17_aporte: q17Val,
+                q18_medidas: q18Checked.join(", "),
+                q19_prioridad: document.getElementById('survey-q19') ? document.getElementById('survey-q19').value : "",
+                q20_propuesta: document.getElementById('survey-q20') ? document.getElementById('survey-q20').value : ""
             };
 
-            if (view === 'home') return (
-                <div>
-                    <div className="bg-[#8B0000] text-white shadow-lg sticky top-0 z-50 h-16 flex items-center px-6 justify-between">
-                        <div className="flex items-center gap-3"><div className="bg-white p-1 rounded-full"><img src={LOGO_URL} className="w-8 h-8 object-contain" /></div><h1 className="font-serif font-bold text-lg tracking-wide">Plataforma Académica</h1></div>
-                        <button onClick={() => setView('login')} className="text-xs opacity-70 hover:opacity-100 flex items-center gap-1 border border-white/30 px-2 py-1 rounded"><Lock size={12}/> Editor</button>
-                    </div>
-                    <div className="max-w-4xl mx-auto p-8">
-                        <div className="text-center mb-12"><h2 className="text-4xl font-bold text-gray-800 mb-4">Bienvenido</h2><p className="text-gray-600">Selecciona un cuestionario.</p></div>
-                        {loading ? <div className="text-center">Cargando...</div> : 
-                            <div className="grid gap-4">
-                                {forms.map(f => (
-                                    <div key={f.id} onClick={() => openForm(f.id)} className="bg-white p-6 rounded-xl shadow border-l-8 border-[#8B0000] cursor-pointer hover:shadow-lg transition flex justify-between items-center group">
-                                        <div><h3 className="text-xl font-bold text-gray-800 group-hover:text-red-700">{f.title}</h3><p className="text-gray-500 text-sm mt-1 line-clamp-2">{f.description}</p></div>
-                                        <ArrowRight className="text-gray-300 group-hover:text-red-600" />
-                                    </div>
-                                ))}
-                                {forms.length === 0 && <div className="text-center p-10 text-gray-400 border border-dashed rounded">No hay cuestionarios públicos.</div>}
-                            </div>
-                        }
-                    </div>
-                    <StatusFooter />
-                </div>
-            );
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Importante para evitar error CORS con Google Script
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                // Con mode: 'no-cors', la respuesta es opaca, asumimos éxito si no hay error de red
+                alert("✅ ¡Datos guardados exitosamente en Google Sheets!");
+                btn.innerHTML = originalText;
+                lucide.createIcons();
+                btn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("❌ Hubo un error al guardar los datos. Revisa la consola o tu conexión.");
+                btn.innerHTML = originalText;
+                lucide.createIcons();
+                btn.disabled = false;
+            });
+        }
 
-            if (view === 'login') return <div><div className="bg-[#8B0000] h-16 w-full fixed top-0"></div><div className="pt-20"><Login onLogin={() => setView('dash')} /></div><StatusFooter /></div>;
-            if (view === 'dash') return <div><div className="bg-[#8B0000] text-white h-16 flex items-center px-6 shadow"><span className="font-bold">Panel Editor</span></div><Dashboard onCreate={() => { setActiveForm('new'); setView('editor'); }} onEdit={(id) => { setActiveForm(id); setView('editor'); }} onLogout={() => setView('home')} /><StatusFooter /></div>;
-            if (view === 'editor') return <><FormEditor formId={activeForm} onBack={() => setView('dash')} /><StatusFooter /></>;
-            if (view === 'student') return <><StudentForm form={activeForm} onBack={() => setView('home')} /><StatusFooter /></>;
-            return <div>Error estado</div>;
-        };
-
-        const root = createRoot(document.getElementById('root'));
-        root.render(<App />);
+        window.onload = init;
     </script>
 </body>
 </html>
-
-
-
-
