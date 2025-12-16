@@ -835,7 +835,6 @@
 
             // 1. Calcular deudas específicas en semestres INFERIORES o IGUALES al máximo alcanzado
             let debtSemesters = [];
-            let levelingDebtCount = 0;
             
             if (maxSemester > 0) {
                 semestersData.forEach(sem => {
@@ -843,14 +842,46 @@
                     if (sem.id <= 10 && sem.id <= maxSemester) {
                         let hasPendingInThisSemester = false;
                         
-                        sem.subjects.forEach(sub => {
-                            const status = subjectStates[sub.id];
-                            // Si NO está aprobada/adelantada, es deuda
-                            if (status !== 'approved' && status !== 'advanced') {
-                                levelingDebtCount++;
+                        // LÓGICA ESPECIAL PARA 9no y 10mo (MODs)
+                        if (sem.id === 9 || sem.id === 10) {
+                            // 1. Verificar Troncal (Ética)
+                            const troncalSubject = sem.subjects.find(s => s.type === 'troncal');
+                            const stTroncal = subjectStates[troncalSubject.id];
+                            const isTroncalOk = stTroncal === 'approved' || stTroncal === 'advanced';
+
+                            // 2. Verificar si al menos UN módulo completo (sus 3 materias) está aprobado
+                            const modTypes = ['mod-hum', 'mod-cc', 'mod-amb', 'mod-psa'];
+                            let isAnyModComplete = false;
+
+                            for (const type of modTypes) {
+                                const modSubjects = sem.subjects.filter(s => s.type === type);
+                                // Verificar si TODAS las materias de este módulo están aprobadas
+                                const isThisModComplete = modSubjects.every(s => {
+                                    const st = subjectStates[s.id];
+                                    return st === 'approved' || st === 'advanced';
+                                });
+                                
+                                if (isThisModComplete) {
+                                    isAnyModComplete = true;
+                                    break; // Con uno basta
+                                }
+                            }
+
+                            // Si falta la troncal O no se completó ningún módulo entero, hay deuda en este semestre
+                            if (!isTroncalOk || !isAnyModComplete) {
                                 hasPendingInThisSemester = true;
                             }
-                        });
+
+                        } else {
+                            // LÓGICA ESTÁNDAR (1ro a 8vo)
+                            // Si falta cualquier materia, es deuda
+                            sem.subjects.forEach(sub => {
+                                const status = subjectStates[sub.id];
+                                if (status !== 'approved' && status !== 'advanced') {
+                                    hasPendingInThisSemester = true;
+                                }
+                            });
+                        }
                         
                         if (hasPendingInThisSemester) {
                             debtSemesters.push(sem.id);
