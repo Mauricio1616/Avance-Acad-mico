@@ -98,7 +98,7 @@
             
             <div id="controls-map" class="flex gap-2 w-full md:w-auto">
                 <button onclick="switchView('report')" class="flex-1 md:flex-none flex justify-center items-center gap-2 bg-psych-blue text-white px-4 py-2 rounded-lg hover:bg-slate-900 transition-colors shadow-sm text-sm border-b-2 border-slate-900 active:scale-95">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> Una vez termines de llenar la malla curricular con tu avance, dale click aqui para completar tu reporte de avance académico.
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Click aqui para continuar con tu reporte de avance académico.
                 </button>
                 <button onclick="downloadJSON()" class="flex-none flex items-center gap-2 bg-white text-psych-red border border-psych-red px-3 py-2 rounded-lg hover:bg-red-50 transition-colors text-sm active:scale-95" title="Descargar Datos JSON">
                     <i data-lucide="download" class="w-4 h-4"></i>
@@ -125,7 +125,16 @@
                             <i data-lucide="mouse-pointer-2" class="w-4 h-4 md:w-5 md:h-5"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-slate-800 text-xs md:text-sm">¿Cómo actualizar tu avance?</h3>
+                            <h3 class="font-bold text-slate-800 text-xs md:text-sm">LEE ESTAS INSTRUCCIONES ANTES DE LLENAR ESTE FORMULARIO INTERACTIVO</h3>
+                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">1.- Llena la malla curricular interactiva según tu avance académico, por favor se sincero ya que estos datos son de total importancia para la trasición a la nueva malla curricular.</p>
+                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">2.- Al final a la derecha se encuentran las materias electivas y talleres, el requisito es pasar al menos 4 electivas y 4 talleres, si marcas 4 de cada uno se dara por completada esa area, si no hay una electiva o taller que hayas cursado en esa misma seccion de electiva o taller marca una de las tarjetas que dicen OTRA ELECTIVA / OTRO TALLER </p>
+                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">3.- En el tema de los MODS vendrián a ser las áreas que uno escoge a partir de 9no y 10mo Semestre y solo deberían escoger una de ellas</p>
+                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">4.- Indica aprobado (verde) las materias, electivas y talleres que ya venciste</p>
+                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">5.- Indica cursando (amarillo) si aún estas avanzando la materia, electiva o taller en el actual semestre y aun no la tienes aprobado ni reprobada</p>
+                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">6.- Indica adelantado (azul) si hiciste un levantamiento, ejemplo Desarrollo Humano I Y Desarrollo Humano II</p>
+                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">7.- Indica reprobado (rojo) si reprobaste una materia, electiva o taller en el actual semestre</p>
+                            
+                            <h3 class="font-bold text-slate-800 text-xs md:text-sm">8.-¿Cómo actualizar tu avance?</h3>
                             <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">
                                 Toca las materias para cambiar su estado:
                             </p>
@@ -1210,6 +1219,7 @@
     </script>
 </body>
 </html>
+
 
 
 
