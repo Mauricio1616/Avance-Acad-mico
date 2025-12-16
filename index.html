@@ -135,6 +135,10 @@
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">Cursando</span>
                                 <span class="text-slate-300 text-[10px]"><i data-lucide="arrow-right" class="w-3 h-3"></i></span>
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">Aprobada</span>
+                                <span class="text-slate-300 text-[10px]"><i data-lucide="arrow-right" class="w-3 h-3"></i></span>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-900 border border-blue-500 shadow-sm">Adelantada</span>
+                                <span class="text-slate-300 text-[10px]"><i data-lucide="arrow-right" class="w-3 h-3"></i></span>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-psych-red border border-psych-red shadow-sm">Reprobada</span>
                             </div>
                         </div>
                     </div>
@@ -184,19 +188,19 @@
                         <h3 class="text-sm font-bold text-psych-blue uppercase mb-4 tracking-wider no-print">Datos del Estudiante</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 print:gap-4">
                             <div class="space-y-1">
-                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 no-print"></i> 1.- Nombre Completo</label>
+                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 no-print"></i>Nombre Completo</label>
                                 <input type="text" id="input-name" placeholder="Ej. Juan Pérez" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-bold focus:ring-2 focus:ring-psych-blue focus:outline-none" oninput="syncInputs(this.value, 'name')">
                             </div>
                             <div class="space-y-1">
-                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="hash" class="w-3 h-3 no-print"></i> 2.- Registro Universitario</label>
+                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="hash" class="w-3 h-3 no-print"></i>Registro Universitario</label>
                                 <input type="text" id="input-registry" placeholder="Ej. 202300000" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
                             </div>
                             <div class="space-y-1">
-                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 no-print"></i> 3.- Número de celular</label>
+                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 no-print"></i>Número de celular</label>
                                 <input type="number" inputmode="numeric" id="input-phone" placeholder="Ej. 70000000" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
                             </div>
                             <div class="space-y-1">
-                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 no-print"></i> 4.- Correo Electrónico</label>
+                                <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 no-print"></i>Correo Electrónico</label>
                                 <input type="email" id="input-email" placeholder="Ej. estudiante@uagrm.edu.bo" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
                             </div>
                         </div>
@@ -241,7 +245,7 @@
                     <div class="bg-slate-50 border-2 border-slate-200 rounded-xl p-4 md:p-8 relative shadow-sm">
                         <!-- Título & Objetivo -->
                         <div class="mb-8 border-b-2 border-psych-blue pb-6">
-                            <h2 class="text-xl md:text-2xl font-bold text-psych-blue text-center mb-4 uppercase tracking-tight">Encuesta Estudiantil</h2>
+                            <h2 class="text-xl md:text-2xl font-bold text-psych-blue text-center mb-4 uppercase tracking-tight">Encuesta para Estudiantes sobre Situación Académica y Transición al Nuevo Currículo</h2>
                             <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-psych-blue">
                                 <p class="text-xs md:text-sm text-slate-700 text-justify">
                                     <span class="font-bold text-psych-blue">OBJETIVO:</span> Conocer tu situación actual, tus percepciones sobre el proceso de transición curricular y tus preferencias respecto a las medidas de adaptación.
@@ -257,13 +261,13 @@
                                 <div class="md:col-span-2">
                                     <p class="text-xs text-slate-500 italic flex items-center gap-1">
                                         <i data-lucide="info" class="w-3 h-3"></i>
-                                        Las preguntas 1 a 5 se completan automáticamente con los datos del encabezado.
+                                        Se sincero con tus respuestas, recuerda que con estos datos nos ayudas a que la transición sea más fácil para todos.
                                     </p>
                                 </div>
                                 
                                 <!-- Q6 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">6.- Carga académica registrada este semestre:</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">Número de Materias registradas este semestre:</label>
                                     <div class="flex items-center gap-3 bg-slate-50 p-2 rounded border border-slate-200">
                                         <span class="text-xs font-semibold text-slate-600 uppercase flex-1">• Número de materias inscritas:</span>
                                         <input type="number" inputmode="numeric" id="survey-q6" class="w-16 border-b-2 border-slate-300 focus:border-psych-blue text-center text-sm font-bold text-psych-blue focus:outline-none bg-transparent" placeholder="#">
@@ -272,7 +276,7 @@
 
                                 <!-- Q7 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">7.- ¿Trabajas mientras estudias?</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">¿Trabajas mientras estudias?</label>
                                     <div class="bg-slate-50 p-2 rounded border border-slate-200">
                                         <select id="survey-q7" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
                                             <option value="" disabled selected>Selecciona una opción...</option>
@@ -284,7 +288,7 @@
 
                                 <!-- Q8 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">8.- ¿Cuántas horas al día estudias?</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">¿Cuántas horas al día puedes realmente dedicarle al estudio?</label>
                                     <div class="bg-slate-50 p-2 rounded border border-slate-200">
                                         <input type="number" inputmode="numeric" id="survey-q8" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700" placeholder="Indicar número">
                                     </div>
@@ -292,7 +296,7 @@
 
                                 <!-- Q9 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">9.- Estado general de avance:</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">Estado general de avance de acuerdo a la malla curricular:</label>
                                     <div class="bg-slate-50 p-2 rounded border border-slate-200">
                                         <select id="survey-q9" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
                                             <option value="" disabled selected>Selecciona una opción...</option>
@@ -312,11 +316,11 @@
                             <div class="border-t-2 border-psych-blue bg-white p-4 md:p-6 rounded-b-lg rounded-tr-lg shadow-sm border-l border-r border-b border-slate-200">
                                  <p class="text-xs text-slate-500 italic mb-4 flex items-center gap-1">
                                     <i data-lucide="info" class="w-3 h-3"></i>
-                                    Listado automático según reporte.
+                                    Responde solo si tienes materias atrasadas.
                                  </p>
                                  <!-- Q13 -->
                                  <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">13.- ¿Afectan tu avance hacia el nuevo currículo?</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">¿Estas materias atrasadas afectan tu avance hacia la nueva malla curricular?</label>
                                     <div class="bg-slate-50 p-3 rounded border border-slate-200">
                                         <select id="survey-q13" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 mb-3 font-medium text-slate-700" onchange="toggleDepende(this)">
                                             <option value="" disabled selected>Selecciona...</option>
@@ -337,28 +341,28 @@
                             <div class="border-t-2 border-psych-blue bg-white p-4 md:p-6 rounded-b-lg rounded-tr-lg shadow-sm space-y-6 border-l border-r border-b border-slate-200">
                                 <!-- Q16 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">16.- ¿Cómo te sientes respecto a la implementación?</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">¿Cómo te sientes respecto a la implementación de la nueva malla curricular?</label>
                                     <div class="bg-slate-50 p-3 rounded border border-slate-200">
                                         <select id="survey-q16" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
                                             <option value="" disabled selected>Selecciona...</option>
-                                            <option value="Motivado">Motivado(a)</option>
-                                            <option value="Cauteloso">Cauteloso(a)</option>
-                                            <option value="Preocupado">Preocupado(a)</option>
-                                            <option value="Indiferente">Indiferente</option>
-                                            <option value="Confundido">Confundido(a)</option>
+                                            <option value="Motivado">Motivado(a): lo veo como una oportunidad para mejorar la formación.</option>
+                                            <option value="Cauteloso">Cauteloso(a): prefiero observar cómo se desarrolla antes de opinar.</option>
+                                            <option value="Preocupado">Preocupado(a): temo que afecte mi avance académico.</option>
+                                            <option value="Indiferente">Indiferente: no creo que cambie mucho mi situación.</option>
+                                            <option value="Confundido">Confundido(a): aún no comprendo bien el nuevo plan.</option>
                                         </select>
                                     </div>
                                 </div>
                                 <!-- Q17 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">17.- ¿Qué crees que aportará?</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">¿Qué crees que aportará la nueva malla curricular?</label>
                                     <div class="bg-slate-50 p-3 rounded border border-slate-200">
                                         <select id="survey-q17" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 mb-3 font-medium text-slate-700" onchange="toggleOtro(this, 'other-17')">
                                             <option value="" disabled selected>Selecciona...</option>
-                                            <option value="Organización">Mejor organización</option>
-                                            <option value="Secuencias">Secuencias más claras</option>
+                                            <option value="Organización">Mejor organización del avance académico</option>
+                                            <option value="Secuencias">Secuencias más claras y lógicas de contenido</option>
                                             <option value="Flexibilidad">Mayor flexibilidad</option>
-                                            <option value="Claridad">Claridad en perfiles</option>
+                                            <option value="Claridad">Claridad en perfiles y competencias</option>
                                             <option value="Ninguna">Ninguna de las anteriores</option>
                                             <option value="Otro">Otra opinión</option>
                                         </select>
@@ -374,13 +378,13 @@
                             <div class="border-t-2 border-psych-blue bg-white p-4 md:p-6 rounded-b-lg rounded-tr-lg shadow-sm space-y-6 border-l border-r border-b border-slate-200">
                                 <!-- Q18 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-3">18.- Medidas útiles (selección múltiple):</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-3">Medidas útiles (selección múltiple):</label>
                                     <div id="survey-q18-container" class="space-y-2 ml-1 md:ml-2 bg-slate-50 p-3 md:p-4 rounded border border-slate-200">
-                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos verano" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Cursos de verano intensivos</span></label>
-                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Semestres igualacion" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Semestres de igualación</span></label>
-                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos nivelacion" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Cursos especiales de nivelación</span></label>
+                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos verano" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Cursos de verano intensivos (para adelantar o recuperar)</span></label>
+                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Semestres igualacion" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Semestres de igualación sin prerrequisitos</span></label>
+                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos nivelacion" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Cursos especiales de nivelación en el semestre</span></label>
                                         <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Tutorias" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Tutorías académicas personalizadas</span></label>
-                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Flexibilidad prerrequisitos" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Flexibilidad de prerrequisitos</span></label>
+                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Flexibilidad prerrequisitos" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Adaptación flexible de prerrequisitos por única vez</span></label>
                                         <div class="pt-2">
                                             <label class="flex items-center gap-3 text-sm text-slate-700 font-medium mb-1"><input type="checkbox" id="q18-other-check" value="Otro" class="accent-psych-blue w-4 h-4"> Otros:</label>
                                             <input type="text" id="q18-other-text" class="w-full border-b border-slate-300 text-sm italic ml-7 focus:outline-none focus:border-psych-blue bg-transparent" placeholder="Especifique...">
@@ -389,15 +393,15 @@
                                 </div>
                                 <!-- Q19 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">19.- Prioridad absoluta (elige una):</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">Prioridad absoluta (elige una):</label>
                                     <div class="bg-slate-50 p-3 rounded border border-slate-200">
                                         <select id="survey-q19" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
                                             <option value="" disabled selected>Selecciona...</option>
-                                            <option value="Verano">Cursos de verano</option>
-                                            <option value="Igualación">Semestres de igualación</option>
+                                            <option value="Verano">Cursos de verano intensivos (para adelantar o recuperar)</option>
+                                            <option value="Igualación">Semestres de igualación sin prerrequisitos</option>
                                             <option value="Nivelación">Cursos de nivelación</option>
-                                            <option value="Tutorías">Tutorías académicas</option>
-                                            <option value="Flexibilidad">Flexibilidad prerrequisitos</option>
+                                            <option value="Tutorías">Tutorías académicas personalizadas</option>
+                                            <option value="Flexibilidad">Adaptación flexible de prerrequisitos por única vez</option>
                                             <option value="Otro">Otro</option>
                                         </select>
                                     </div>
@@ -411,7 +415,7 @@
                             <div class="border-t-2 border-psych-blue bg-white p-4 md:p-6 rounded-b-lg rounded-tr-lg shadow-sm border-l border-r border-b border-slate-200">
                                 <!-- Q20 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">20.- Propuesta de mejora:</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">Propuesta para mejorar la transición (respuesta abierta):</label>
                                     <textarea id="survey-q20" rows="4" class="w-full border-2 border-slate-300 rounded-lg p-3 text-sm focus:border-psych-blue focus:outline-none focus:ring-1 focus:ring-blue-100 transition-all" placeholder="Escribe tu propuesta aquí..."></textarea>
                                 </div>
                             </div>
@@ -440,6 +444,8 @@
         <div class="flex items-center gap-1.5 md:gap-2"><div class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border bg-white border-gray-300"></div><span class="text-[10px] md:text-xs text-slate-700">Pendiente</span></div>
         <div class="flex items-center gap-1.5 md:gap-2"><div class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border bg-amber-100 border-amber-500"></div><span class="text-[10px] md:text-xs text-slate-700">Cursando</span></div>
         <div class="flex items-center gap-1.5 md:gap-2"><div class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border bg-emerald-100 border-emerald-500"></div><span class="text-[10px] md:text-xs text-slate-700">Aprobada</span></div>
+        <div class="flex items-center gap-1.5 md:gap-2"><div class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border bg-blue-100 border-blue-500"></div><span class="text-[10px] md:text-xs text-slate-700">Adelantada</span></div>
+        <div class="flex items-center gap-1.5 md:gap-2"><div class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border bg-red-50 border-psych-red"></div><span class="text-[10px] md:text-xs text-slate-700">Reprobada</span></div>
     </footer>
 
     <!-- MODAL DE DESCARGA (Responsivo) -->
@@ -538,8 +544,8 @@
             { id: 8, name: "8vo Semestre", subjects: [{ id: "INV-450", name: "Investigación VI", prereqs: ["INV-400"], type: "troncal" }, { id: "CSO-450", name: "Proyectos II", prereqs: ["CSO-400"], type: "troncal" }, { id: "CSO-451", name: "Téc. de Int. Socio-Organizacional II", prereqs: ["CSO-401"], type: "troncal" }, { id: "PSI-451", name: "Psicodiagnóstico", prereqs: ["PSI-401"], type: "troncal" }, { id: "PSI-450", name: "Téc. de Int. Clínica II", prereqs: ["PSI-400"], type: "troncal" }, { id: "PSI-452", name: "Téc. de Int. Educativa II", prereqs: ["PSI-402"], type: "troncal" }] },
             { id: 9, name: "9no Semestre (MODs)", subjects: [{ id: "DEP-500", name: "Ética Profesional I", prereqs: ["PSI-451"], type: "troncal" }, { id: "HUM-CLI-1", name: "Abordaje Clínica I Humanista", prereqs: ["PSI-450"], type: "mod-hum" }, { id: "HUM-EDU-1", name: "Abordaje Educativo I Humanista", prereqs: ["PSI-452"], type: "mod-hum" }, { id: "HUM-SOC-1", name: "Abordaje Socio-Org. I Humanista", prereqs: ["CSO-451"], type: "mod-hum" }, { id: "COG-CLI-1", name: "Abordaje Clínica I Cognitivo Conductual", prereqs: ["PSI-450"], type: "mod-cc" }, { id: "COG-EDU-1", name: "Abordaje Educativo I Cognitivo Conductual", prereqs: ["PSI-452"], type: "mod-cc" }, { id: "COG-SOC-1", name: "Abordaje Socio-Org. I Cognitivo Conductual", prereqs: ["CSO-451"], type: "mod-cc" }, { id: "AMB-AMB-1", name: "Psicología Ambiental I (Ambiental Comunitario)", prereqs: ["CSO-451"], type: "mod-amb" }, { id: "AMB-COM-1", name: "Psicología Comunitaria I (Ambiental Comunitario)", prereqs: ["PSI-451"], type: "mod-amb" }, { id: "AMB-ORG-1", name: "Psicología de las Organizaciones I (Ambiental Comunitario)", prereqs: ["PSI-451"], type: "mod-amb" }, { id: "PSA-CLI-1", name: "Abordaje Clínica I Psicoanalítico", prereqs: ["PSI-450"], type: "mod-psa" }, { id: "PSA-EDU-1", name: "Abordaje Educativo I Psicoanalítico", prereqs: ["PSI-452"], type: "mod-psa" }, { id: "PSA-SOC-1", name: "Abordaje Socio-Org. I Psicoanalítico", prereqs: ["CSO-451"], type: "mod-psa" }] },
             { id: 10, name: "10mo Semestre (MODs)", subjects: [{ id: "DEP-501", name: "Ética Profesional II", prereqs: ["DEP-500"], type: "troncal" }, { id: "HUM-CLI-2", name: "Abordaje Clínica II Humanista", prereqs: ["HUM-CLI-1"], type: "mod-hum" }, { id: "HUM-EDU-2", name: "Abordaje Educativo II Humanista", prereqs: ["HUM-EDU-1"], type: "mod-hum" }, { id: "HUM-SOC-2", name: "Abordaje Socio-Org. II Humanista", prereqs: ["HUM-SOC-1"], type: "mod-hum" }, { id: "COG-CLI-2", name: "Abordaje Clínica II Cognitivo Conductual", prereqs: ["COG-CLI-1"], type: "mod-cc" }, { id: "COG-EDU-2", name: "Abordaje Educativo II Cognitivo Conductual", prereqs: ["COG-EDU-1"], type: "mod-cc" }, { id: "COG-SOC-2", name: "Abordaje Socio-Org. II Cognitivo Conductual", prereqs: ["COG-SOC-1"], type: "mod-cc" }, { id: "AMB-AMB-2", name: "Psicología Ambiental II (Ambiental Comunitario)", prereqs: ["AMB-AMB-1"], type: "mod-amb" }, { id: "AMB-COM-2", name: "Psicología Comunitaria II (Ambiental Comunitario)", prereqs: ["AMB-COM-1"], type: "mod-amb" }, { id: "AMB-ORG-2", name: "Psicología de las Organizaciones II (Ambiental Comunitario)", prereqs: ["AMB-ORG-1"], type: "mod-amb" }, { id: "PSA-CLI-2", name: "Abordaje Clínica II Psicoanalítico", prereqs: ["PSA-CLI-1"], type: "mod-psa" }, { id: "PSA-EDU-2", name: "Abordaje Educativo II Psicoanalítico", prereqs: ["PSA-EDU-1"], type: "mod-psa" }, { id: "PSA-SOC-2", name: "Abordaje Socio-Org. II Psicoanalítico", prereqs: ["PSA-SOC-1"], type: "mod-psa" }] },
-            { id: 11, name: "Electivas (4 Requeridas)", subjects: [{ id: "ELE-GRU-1", name: "Grupo Relacional I", type: "electiva" }, { id: "ELE-GRU-2", name: "Grupo Relacional II", prereqs: ["ELE-GRU-1"], type: "electiva" }, { id: "ELE-COM-1", name: "Computación I", type: "electiva" }, { id: "ELE-COM-2", name: "Computación II", prereqs: ["ELE-COM-1"], type: "electiva" }, { id: "ELE-REC", name: "Técnicas Recreacionales", type: "electiva" }, { id: "ELE-NAT-1", name: "Lengua Nativa I", type: "electiva" }, { id: "ELE-NAT-2", name: "Lengua Nativa II", prereqs: ["ELE-NAT-1"], type: "electiva" }, { id: "ELE-NAT-3", name: "Lengua Nativa III", prereqs: ["ELE-NAT-2"], type: "electiva" }, { id: "ELE-NAT-4", name: "Lengua Nativa IV", prereqs: ["ELE-NAT-3"], type: "electiva" }, { id: "ELE-ING-1", name: "Idioma Inglés I", type: "electiva" }, { id: "ELE-ING-2", name: "Idioma Inglés II", prereqs: ["ELE-ING-1"], type: "electiva" }] },
-            { id: 12, name: "Talleres (4 Requeridos)", subjects: [{ id: "TAL-MOV", name: "Movimientos Indígenas", prereqs: ["ANT-150"], type: "taller" }, { id: "TAL-TER", name: "Territorios Pueblos IND.", prereqs: ["ANT-150"], type: "taller" }, { id: "TAL-REL", name: "Relac. Interétnicas", prereqs: ["ANT-150"], type: "taller" }, { id: "TAL-IDE", name: "Identidad y Culturas", prereqs: ["CSO-300"], type: "taller" }, { id: "TAL-INF", name: "Soc. Infancia y Juv.", prereqs: ["PSI-254"], type: "taller" }, { id: "TAL-TRA", name: "Soc. Organización y Trabajo", prereqs: ["CSO-250"], type: "taller" }, { id: "TAL-MIG", name: "Soc. Migraciones", prereqs: ["CSO-150"], type: "taller" }, { id: "TAL-DEL", name: "Delito y Sociedad", prereqs: ["CSO-300"], type: "taller" }, { id: "TAL-PSA", name: "Clínica Psicoanalítica", prereqs: ["PSI-353"], type: "taller" }, { id: "TAL-ADO", name: "Psicoanálisis Adolescentes", prereqs: ["PSI-353"], type: "taller" }, { id: "TAL-PSI", name: "Psicosomática", prereqs: ["BIO-250"], type: "taller" }, { id: "TAL-NIN", name: "Psicoanálisis Niños", prereqs: ["PSI-353"], type: "taller" }, { id: "TAL-SAL", name: "Salud Mental Com.", prereqs: ["PSI-354"], type: "taller" }, { id: "TAL-COM", name: "Psicología de la Comunicación", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-CON", name: "Técnicas Conciliación", prereqs: ["CSO-401"], type: "taller" }, { id: "TAL-ROG", name: "Terapia Rogeriana", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-DRA", name: "Psicodrama", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-POS", name: "Psicología Positiva", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-DIF", name: "Dificultades Aprendizaje", prereqs: ["PSI-202"], type: "taller" }, { id: "TAL-FAR", name: "Psicofarmacología", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-HIG", name: "Psicohigiene", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-VOC", name: "Orientación Vocacional", prereqs: ["PSI-402"], type: "taller" }, { id: "TAL-SEX", name: "Psicología de la Sexualidad", prereqs: ["PSI-313"], type: "taller" }, { id: "TAL-ORG", name: "Psicología Organizacional", prereqs: ["CSO-250"], type: "taller" }, { id: "TAL-ESP", name: "Educación Especial", prereqs: ["PSI-402"], type: "taller" }, { id: "TAL-DEP", name: "Psicología del Deporte", prereqs: ["BIO-100"], type: "taller" }, { id: "TAL-SOC", name: "Sociología de la Salud", prereqs: ["CSO-150"], type: "taller" }, { id: "TAL-GEN", name: "Género y Desarrollo", prereqs: ["CSO-200"], type: "taller" }, { id: "TAL-CFL", name: "Teoría Conflicto Social", prereqs: ["CSO-200"], type: "taller" }, { id: "TAL-ECO", name: "Ecología Social", prereqs: ["CSO-201"], type: "taller" }] }
+            { id: 11, name: "Electivas (4 Requeridas)", subjects: [{ id: "ELE-GRU-1", name: "Grupo Relacional I", type: "electiva" }, { id: "ELE-GRU-2", name: "Grupo Relacional II", prereqs: ["ELE-GRU-1"], type: "electiva" }, { id: "ELE-COM-1", name: "Computación I", type: "electiva" }, { id: "ELE-COM-2", name: "Computación II", prereqs: ["ELE-COM-1"], type: "electiva" }, { id: "ELE-REC", name: "Técnicas Recreacionales", type: "electiva" }, { id: "ELE-NAT-1", name: "Lengua Nativa I", type: "electiva" }, { id: "ELE-NAT-2", name: "Lengua Nativa II", prereqs: ["ELE-NAT-1"], type: "electiva" }, { id: "ELE-NAT-3", name: "Lengua Nativa III", prereqs: ["ELE-NAT-2"], type: "electiva" }, { id: "ELE-NAT-4", name: "Lengua Nativa IV", prereqs: ["ELE-NAT-3"], type: "electiva" }, { id: "ELE-ING-1", name: "Idioma Inglés I", type: "electiva" }, { id: "ELE-ING-2", name: "Idioma Inglés II", prereqs: ["ELE-ING-1"], type: "electiva" }, { id: "ELE-EXT-1", name: "OTRA ELECTIVA", type: "electiva" }, { id: "ELE-EXT-2", name: "OTRA ELECTIVA", type: "electiva" }, { id: "ELE-EXT-3", name: "OTRA ELECTIVA", type: "electiva" }, { id: "ELE-EXT-4", name: "OTRA ELECTIVA", type: "electiva" }] },
+            { id: 12, name: "Talleres (4 Requeridos)", subjects: [{ id: "TAL-MOV", name: "Movimientos Indígenas", prereqs: ["ANT-150"], type: "taller" }, { id: "TAL-TER", name: "Territorios Pueblos IND.", prereqs: ["ANT-150"], type: "taller" }, { id: "TAL-REL", name: "Relac. Interétnicas", prereqs: ["ANT-150"], type: "taller" }, { id: "TAL-IDE", name: "Identidad y Culturas", prereqs: ["CSO-300"], type: "taller" }, { id: "TAL-INF", name: "Soc. Infancia y Juv.", prereqs: ["PSI-254"], type: "taller" }, { id: "TAL-TRA", name: "Soc. Organización y Trabajo", prereqs: ["CSO-250"], type: "taller" }, { id: "TAL-MIG", name: "Soc. Migraciones", prereqs: ["CSO-150"], type: "taller" }, { id: "TAL-DEL", name: "Delito y Sociedad", prereqs: ["CSO-300"], type: "taller" }, { id: "TAL-PSA", name: "Clínica Psicoanalítica", prereqs: ["PSI-353"], type: "taller" }, { id: "TAL-ADO", name: "Psicoanálisis Adolescentes", prereqs: ["PSI-353"], type: "taller" }, { id: "TAL-PSI", name: "Psicosomática", prereqs: ["BIO-250"], type: "taller" }, { id: "TAL-NIN", name: "Psicoanálisis Niños", prereqs: ["PSI-353"], type: "taller" }, { id: "TAL-SAL", name: "Salud Mental Com.", prereqs: ["PSI-354"], type: "taller" }, { id: "TAL-COM", name: "Psicología de la Comunicación", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-CON", name: "Técnicas Conciliación", prereqs: ["CSO-401"], type: "taller" }, { id: "TAL-ROG", name: "Terapia Rogeriana", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-DRA", name: "Psicodrama", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-POS", name: "Psicología Positiva", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-DIF", name: "Dificultades Aprendizaje", prereqs: ["PSI-202"], type: "taller" }, { id: "TAL-FAR", name: "Psicofarmacología", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-HIG", name: "Psicohigiene", prereqs: ["PSI-400"], type: "taller" }, { id: "TAL-VOC", name: "Orientación Vocacional", prereqs: ["PSI-402"], type: "taller" }, { id: "TAL-SEX", name: "Psicología de la Sexualidad", prereqs: ["PSI-313"], type: "taller" }, { id: "TAL-ORG", name: "Psicología Organizacional", prereqs: ["CSO-250"], type: "taller" }, { id: "TAL-ESP", name: "Educación Especial", prereqs: ["PSI-402"], type: "taller" }, { id: "TAL-DEP", name: "Psicología del Deporte", prereqs: ["BIO-100"], type: "taller" }, { id: "TAL-SOC", name: "Sociología de la Salud", prereqs: ["CSO-150"], type: "taller" }, { id: "TAL-GEN", name: "Género y Desarrollo", prereqs: ["CSO-200"], type: "taller" }, { id: "TAL-CFL", name: "Teoría Conflicto Social", prereqs: ["CSO-200"], type: "taller" }, { id: "TAL-ECO", name: "Ecología Social", prereqs: ["CSO-201"], type: "taller" }, { id: "TAL-EXT-1", name: "OTRO TALLER", type: "taller" }, { id: "TAL-EXT-2", name: "OTRO TALLER", type: "taller" }, { id: "TAL-EXT-3", name: "OTRO TALLER", type: "taller" }, { id: "TAL-EXT-4", name: "OTRO TALLER", type: "taller" }] }
         ];
 
         let subjectStates = {};
@@ -1100,6 +1106,20 @@
             let q17Val = document.getElementById('survey-q17') ? document.getElementById('survey-q17').value : "";
             if (q17Val === "Otro") q17Val += ": " + document.getElementById('other-17').value;
 
+            // Calcular Electivas y Talleres para el reporte
+            let countElectivas = 0;
+            let countTalleres = 0;
+            
+            Object.keys(subjectStates).forEach(id => {
+                const status = subjectStates[id];
+                const sub = getSubjectById(id);
+                
+                if (status === 'approved' || status === 'advanced') {
+                     if (sub.type === 'electiva') countElectivas++;
+                     else if (sub.type === 'taller') countTalleres++;
+                }
+            });
+
             const payload = {
                 // Datos Personales
                 nombre: document.getElementById('input-name').value,
@@ -1113,6 +1133,10 @@
                 aprobadas: document.getElementById('stat-approved').innerText,
                 pendientes: document.getElementById('stat-pending').innerText,
                 reprobadas: document.getElementById('stat-failed').innerText,
+
+                // --- NUEVO: CONTADORES ESPECÍFICOS ---
+                electivas_aprobadas: countElectivas + "/4",
+                talleres_aprobados: countTalleres + "/4",
                 
                 // Encuesta
                 q6_carga: document.getElementById('survey-q6') ? document.getElementById('survey-q6').value : "",
@@ -1155,4 +1179,3 @@
     </script>
 </body>
 </html>
-
