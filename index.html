@@ -118,28 +118,42 @@
         
         <!-- INSTRUCCIONES FLOTANTES (Adaptadas a Móvil) -->
         <div id="map-instructions" class="absolute top-4 left-4 right-4 md:left-6 md:right-auto md:w-96 z-40 pointer-events-none no-print transition-all duration-300">
-            <div class="bg-white/95 backdrop-blur shadow-2xl rounded-xl border-l-4 border-psych-blue p-3 md:p-4 pointer-events-auto animate-fade-in-down ring-1 ring-slate-900/5">
+            <!-- Se mantiene max-h-[80vh] y overflow-y-auto para permitir scroll con el texto largo -->
+            <div class="bg-white/95 backdrop-blur shadow-2xl rounded-xl border-l-4 border-psych-blue p-3 md:p-4 pointer-events-auto animate-fade-in-down ring-1 ring-slate-900/5 max-h-[80vh] overflow-y-auto">
                 <div class="flex justify-between items-start gap-3">
                     <div class="flex gap-3">
-                        <div class="mt-1 bg-blue-50 p-2 rounded-lg text-psych-blue shadow-sm border border-blue-100 flex-shrink-0">
+                        <div class="mt-1 bg-blue-50 p-2 rounded-lg text-psych-blue shadow-sm border border-blue-100 flex-shrink-0 h-fit">
                             <i data-lucide="mouse-pointer-2" class="w-4 h-4 md:w-5 md:h-5"></i>
                         </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-xs md:text-sm">LEE ESTAS INSTRUCCIONES ANTES DE LLENAR ESTE FORMULARIO INTERACTIVO (dale click a la x una vez acabes de leer estas instrucciones)</h3>
-                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">1.- Llena la malla curricular interactiva según tu avance académico, por favor se sincero ya que estos datos son de total importancia para la transición a la nueva malla curricular.</p>
-                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">2.- Al final a la derecha se encuentran las materias electivas y talleres, el requisito es pasar al menos 4 electivas y 4 talleres, si marcas 4 de cada uno se dara por completada esa area, si no hay una electiva o taller que hayas cursado en esa misma seccion de electiva o taller marca una de las tarjetas que dicen OTRA ELECTIVA / OTRO TALLER.</p>
-                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">3.- En el tema de los MODS vendrián a ser las áreas que uno escoge a partir de 9no y 10mo Semestre y solo deberían escoger una de ellas.</p>
-                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">4.- Indica aprobado (verde) las materias, electivas y talleres que ya venciste.</p>
-                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">5.- Indica cursando (amarillo) si aún estas avanzando la materia, electiva o taller en el actual semestre y aun no la tienes aprobado ni reprobada.</p>
-                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">6.- Indica adelantado (azul) si hiciste un levantamiento, ejemplo Desarrollo Humano I Y Desarrollo Humano II.</p>
-                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">7.- Indica reprobado (rojo) si reprobaste una materia, electiva o taller en el actual semestre.</p>
-                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">8.- Una vez terminada esta parte de la malla interactiva, en la parte superior derecha debes ingresar tu nombre completo, al lado derecho de donde ingresar tu nombre dale click al boton azul para seguir con el formulario, lo llenas y sigue las instrucciones que te dará al dar click el boton rojo en la parte superior derecha con el nombre de FINALIZAR Y DESCARGAR.</p>
+                        <div class="pr-2">
+                            <h3 class="font-bold text-slate-800 text-xs md:text-sm uppercase tracking-wide">Instrucciones Importantes</h3>
+                            <p class="text-[10px] md:text-xs text-slate-500 mb-3">(Dale click a la <span class="font-bold text-slate-800">X</span> una vez acabes de leer)</p>
                             
-                            <h3 class="font-bold text-slate-800 text-xs md:text-sm">9.-¿Cómo actualizar tu avance?</h3>
-                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">
+                            <div class="space-y-2.5">
+                                <p class="text-[10px] md:text-xs text-slate-600 leading-relaxed bg-slate-50 p-2 rounded border border-slate-100"><span class="font-bold text-psych-blue">1.-</span> Llena la malla curricular interactiva según tu avance académico, por favor <span class="font-bold text-slate-800 underline">se sincero</span> ya que estos datos son de total importancia para la transición a la nueva malla curricular.</p>
+                                
+                                <p class="text-[10px] md:text-xs text-slate-600 leading-relaxed"><span class="font-bold text-psych-blue">2.-</span> Al final a la derecha se encuentran las materias electivas y talleres, el requisito es pasar al menos <span class="font-bold text-slate-800">4 electivas y 4 talleres</span>, si marcas 4 de cada uno se dara por completada esa area, si no hay una electiva o taller que hayas cursado en esa misma seccion de electiva o taller marca una de las tarjetas que dicen <span class="font-bold italic text-slate-700">OTRA ELECTIVA / OTRO TALLER</span>.</p>
+                                
+                                <p class="text-[10px] md:text-xs text-slate-600 leading-relaxed"><span class="font-bold text-psych-blue">3.-</span> En el tema de los <span class="font-black text-slate-800">MODS</span> vendrián a ser las áreas que uno escoge a partir de <span class="font-bold">9no y 10mo Semestre</span> y <span class="font-bold text-red-600 underline">solo deberían escoger una de ellas</span>.</p>
+                                
+                                <div class="grid grid-cols-2 gap-2 my-2">
+                                    <p class="text-[10px] md:text-xs text-slate-600 leading-relaxed bg-emerald-50 p-1.5 rounded border border-emerald-100"><span class="font-bold text-psych-blue">4.-</span> Indica <span class="font-bold text-emerald-600 uppercase">aprobado (verde)</span> las materias, electivas y talleres que ya venciste.</p>
+                                    
+                                    <p class="text-[10px] md:text-xs text-slate-600 leading-relaxed bg-amber-50 p-1.5 rounded border border-amber-100"><span class="font-bold text-psych-blue">5.-</span> Indica <span class="font-bold text-amber-600 uppercase">cursando (amarillo)</span> si aún estas avanzando la materia.</p>
+                                    
+                                    <p class="text-[10px] md:text-xs text-slate-600 leading-relaxed bg-blue-50 p-1.5 rounded border border-blue-100"><span class="font-bold text-psych-blue">6.-</span> Indica <span class="font-bold text-blue-600 uppercase">adelantado (azul)</span> si hiciste un levantamiento.</p>
+                                    
+                                    <p class="text-[10px] md:text-xs text-slate-600 leading-relaxed bg-red-50 p-1.5 rounded border border-red-100"><span class="font-bold text-psych-blue">7.-</span> Indica <span class="font-bold text-psych-red uppercase">reprobado (rojo)</span> si reprobaste una materia.</p>
+                                </div>
+                                
+                                <p class="text-[10px] md:text-xs text-slate-600 leading-relaxed border-t border-slate-200 pt-2"><span class="font-bold text-psych-blue">8.-</span> Una vez terminada esta parte de la malla interactiva, en la parte superior derecha debes ingresar tu <span class="font-bold text-slate-800">nombre completo</span>, al lado derecho de donde ingresar tu nombre dale click al <span class="font-bold text-blue-600">boton azul</span> para seguir con el formulario, lo llenas y sigue las instrucciones que te dará al dar click el <span class="font-bold text-psych-red">boton rojo</span> en la parte superior derecha con el nombre de <span class="font-bold">FINALIZAR Y DESCARGAR</span>.</p>
+                            </div>
+
+                            <h3 class="font-bold text-slate-800 text-xs md:text-sm mt-4 mb-2 bg-slate-100 p-1 rounded text-center">9.-¿Cómo actualizar tu avance?</h3>
+                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed text-center mb-2">
                                 Toca las materias para cambiar su estado:
                             </p>
-                            <div class="mt-2 flex flex-wrap gap-1 items-center">
+                            <div class="mt-2 flex flex-wrap gap-1 items-center justify-center">
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white border border-slate-300 text-slate-500 shadow-sm">Pendiente</span>
                                 <span class="text-slate-300 text-[10px]"><i data-lucide="arrow-right" class="w-3 h-3"></i></span>
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">Cursando</span>
@@ -152,7 +166,7 @@
                             </div>
                         </div>
                     </div>
-                    <button onclick="dismissInstructions()" class="text-slate-400 hover:text-psych-red bg-slate-50 hover:bg-red-50 p-1.5 rounded-md transition-colors" title="Cerrar instrucciones">
+                    <button onclick="dismissInstructions()" class="text-slate-400 hover:text-psych-red bg-slate-50 hover:bg-red-50 p-1.5 rounded-md transition-colors h-fit sticky top-0" title="Cerrar instrucciones">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -1220,6 +1234,7 @@
     </script>
 </body>
 </html>
+
 
 
 
