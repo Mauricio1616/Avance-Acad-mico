@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Psiconet - Malla Curricular</title>
     
     <!-- TAILWIND CSS -->
@@ -37,7 +37,7 @@
     </script>
 
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; }
+        body { font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -45,25 +45,23 @@
         @media print {
             @page { margin: 1.5cm; size: A4; }
             html, body { height: auto !important; overflow: visible !important; background: white !important; }
-            .no-print, header, #view-map, #footer-legend, #download-modal, #map-instructions { display: none !important; } /* Ocultar modal e instrucciones al imprimir */
+            .no-print, header, #view-map, #footer-legend, #download-modal, #map-instructions { display: none !important; }
             main { height: auto !important; overflow: visible !important; display: block !important; position: relative !important; }
             #view-report { display: block !important; position: static !important; height: auto !important; overflow: visible !important; background: white !important; }
             
-            /* Inputs de texto limpios para impresión */
             input:not([type="checkbox"]), textarea, select { 
                 border: none !important; 
-                border-bottom: 1px solid #002855 !important; /* Azul en impresión */
+                border-bottom: 1px solid #002855 !important;
                 padding: 0 !important; 
                 font-weight: 500 !important; 
                 color: #0f172a !important; 
                 background: transparent !important; 
                 width: 100% !important;
                 resize: none;
-                appearance: none; /* Quitar flecha de select */
+                appearance: none;
             }
             input::placeholder, textarea::placeholder { color: transparent !important; }
             
-            /* Checkboxes visibles en impresión */
             input[type="checkbox"] {
                 appearance: auto !important;
                 border: 1px solid #000 !important;
@@ -72,42 +70,43 @@
 
             label { display: block !important; color: #64748b !important; font-size: 10px !important; text-transform: uppercase !important; font-weight: bold !important; margin-bottom: 2px !important; }
             .break-inside-avoid { page-break-inside: avoid; }
-            
-            /* Ocultar bordes de secciones en impresión para limpieza */
             .print-clean-container { border: none !important; padding: 0 !important; background: transparent !important; }
-
-            /* Asegurar imagen visible y controlada en impresión */
             img { display: block !important; max-width: 100% !important; }
-            #header-img { max-height: 120px !important; width: auto !important; } /* Control estricto de altura */
+            #header-img { max-height: 120px !important; width: auto !important; }
         }
     </style>
 </head>
 <body class="bg-white text-slate-800 h-screen flex flex-col overflow-hidden">
 
-    <!-- HEADER -->
-    <header class="bg-white border-b-4 border-psych-red px-6 py-4 flex justify-between items-center shadow-md z-20 relative no-print">
-        <div class="flex items-center gap-4">
-            <button id="btn-back" class="hidden p-2 hover:bg-slate-100 rounded-full transition-colors" onclick="switchView('map')">
-                <i data-lucide="arrow-left" class="w-5 h-5 text-psych-blue"></i>
-            </button>
-            <div>
-                <img src="img/Encabezado.png" alt="Psiconet" class="h-16 object-contain">
+    <!-- HEADER (Adaptado a Móvil) -->
+    <header class="bg-white border-b-4 border-psych-red px-4 py-3 md:px-6 md:py-4 flex flex-col md:flex-row justify-between items-center shadow-md z-20 relative no-print gap-3 md:gap-0 transition-all duration-300">
+        <div class="flex items-center justify-between w-full md:w-auto">
+            <div class="flex items-center gap-3">
+                <button id="btn-back" class="hidden p-2 hover:bg-slate-100 rounded-full transition-colors" onclick="switchView('map')">
+                    <i data-lucide="arrow-left" class="w-5 h-5 text-psych-blue"></i>
+                </button>
+                <div>
+                    <!-- Logo más pequeño en móvil -->
+                    <img src="img/Encabezado.png" alt="Psiconet" class="h-10 md:h-16 object-contain">
+                </div>
             </div>
         </div>
         
-        <div class="flex gap-4 items-center">
-            <input type="text" id="quick-name" placeholder="Nombre del Estudiante" class="border border-slate-300 rounded-md px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-psych-blue hidden md:block" oninput="syncInputs(this.value, 'name')">
-            <div id="controls-map" class="flex gap-2">
-                <button onclick="switchView('report')" class="flex items-center gap-2 bg-psych-blue text-white px-4 py-2 rounded-lg hover:bg-slate-900 transition-colors shadow-sm text-sm border-b-2 border-slate-900">
+        <div class="flex flex-col md:flex-row gap-3 items-center w-full md:w-auto">
+            <!-- Input oculto en móvil para ahorrar espacio, se usa el del reporte -->
+            <input type="text" id="quick-name" placeholder="Nombre del Estudiante" class="border border-slate-300 rounded-md px-3 py-1.5 text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-psych-blue hidden md:block" oninput="syncInputs(this.value, 'name')">
+            
+            <div id="controls-map" class="flex gap-2 w-full md:w-auto">
+                <button onclick="switchView('report')" class="flex-1 md:flex-none flex justify-center items-center gap-2 bg-psych-blue text-white px-4 py-2 rounded-lg hover:bg-slate-900 transition-colors shadow-sm text-sm border-b-2 border-slate-900 active:scale-95">
                     <i data-lucide="file-text" class="w-4 h-4"></i> Ver Reporte
                 </button>
-                <button onclick="downloadJSON()" class="flex items-center gap-2 bg-white text-psych-red border border-psych-red px-3 py-2 rounded-lg hover:bg-red-50 transition-colors text-sm" title="Descargar Datos JSON">
+                <button onclick="downloadJSON()" class="flex-none flex items-center gap-2 bg-white text-psych-red border border-psych-red px-3 py-2 rounded-lg hover:bg-red-50 transition-colors text-sm active:scale-95" title="Descargar Datos JSON">
                     <i data-lucide="download" class="w-4 h-4"></i>
                 </button>
             </div>
-            <div id="controls-report" class="hidden flex gap-2">
-                <!-- Botón SOLO Descargar PDF (abre modal) -->
-                <button onclick="showDownloadModal()" class="flex items-center gap-2 bg-psych-red text-white px-6 py-2 rounded-lg hover:bg-red-900 transition-colors shadow-md animate-pulse font-medium">
+            
+            <div id="controls-report" class="hidden w-full md:w-auto">
+                <button onclick="showDownloadModal()" class="w-full md:w-auto flex justify-center items-center gap-2 bg-psych-red text-white px-6 py-2 rounded-lg hover:bg-red-900 transition-colors shadow-md animate-pulse font-medium active:scale-95">
                     <i data-lucide="file-down" class="w-4 h-4"></i> Finalizar y Descargar
                 </button>
             </div>
@@ -117,18 +116,18 @@
     <!-- CONTENIDO PRINCIPAL -->
     <main class="flex-1 relative overflow-hidden bg-slate-50">
         
-        <!-- INSTRUCCIONES FLOTANTES (Solo Mapa) -->
-        <div id="map-instructions" class="absolute top-6 left-6 z-40 max-w-sm pointer-events-none no-print transition-all duration-300">
-            <div class="bg-white/95 backdrop-blur shadow-2xl rounded-xl border-l-4 border-psych-blue p-4 pointer-events-auto animate-fade-in-down ring-1 ring-slate-900/5">
+        <!-- INSTRUCCIONES FLOTANTES (Adaptadas a Móvil) -->
+        <div id="map-instructions" class="absolute top-4 left-4 right-4 md:left-6 md:right-auto md:w-96 z-40 pointer-events-none no-print transition-all duration-300">
+            <div class="bg-white/95 backdrop-blur shadow-2xl rounded-xl border-l-4 border-psych-blue p-3 md:p-4 pointer-events-auto animate-fade-in-down ring-1 ring-slate-900/5">
                 <div class="flex justify-between items-start gap-3">
                     <div class="flex gap-3">
-                        <div class="mt-1 bg-blue-50 p-2.5 rounded-lg text-psych-blue shadow-sm border border-blue-100">
-                            <i data-lucide="mouse-pointer-2" class="w-5 h-5"></i>
+                        <div class="mt-1 bg-blue-50 p-2 rounded-lg text-psych-blue shadow-sm border border-blue-100 flex-shrink-0">
+                            <i data-lucide="mouse-pointer-2" class="w-4 h-4 md:w-5 md:h-5"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-slate-800 text-sm">¿Cómo actualizar tu avance?</h3>
-                            <p class="text-xs text-slate-600 mt-1 leading-relaxed">
-                                Dale <strong>clic a las materias</strong> para cambiar su estado. Siguen este orden cíclico:
+                            <h3 class="font-bold text-slate-800 text-xs md:text-sm">¿Cómo actualizar tu avance?</h3>
+                            <p class="text-[10px] md:text-xs text-slate-600 mt-1 leading-relaxed">
+                                Toca las materias para cambiar su estado:
                             </p>
                             <div class="mt-2 flex flex-wrap gap-1 items-center">
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white border border-slate-300 text-slate-500 shadow-sm">Pendiente</span>
@@ -139,52 +138,51 @@
                             </div>
                         </div>
                     </div>
-                    <button onclick="dismissInstructions()" class="text-slate-400 hover:text-psych-red bg-slate-50 hover:bg-red-50 p-1 rounded-md transition-colors" title="Cerrar instrucciones">
+                    <button onclick="dismissInstructions()" class="text-slate-400 hover:text-psych-red bg-slate-50 hover:bg-red-50 p-1.5 rounded-md transition-colors" title="Cerrar instrucciones">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA: MAPA -->
-        <div id="view-map" class="absolute inset-0 overflow-auto p-8" onscroll="updateLines()">
+        <!-- VISTA: MAPA (Scroll Táctil) -->
+        <div id="view-map" class="absolute inset-0 overflow-auto p-4 md:p-8 touch-pan-x touch-pan-y" onscroll="updateLines()">
             <div class="relative min-w-[3400px] min-h-[1400px]">
                 <svg id="connections-layer" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
                     <defs>
                         <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" /></marker>
-                        <!-- Flecha Activa: Azul Institucional -->
                         <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#002855" /></marker>
                     </defs>
                 </svg>
-                <div id="semesters-container" class="flex gap-12 z-10 relative"></div>
+                <div id="semesters-container" class="flex gap-8 md:gap-12 z-10 relative"></div>
             </div>
         </div>
 
-        <!-- VISTA: REPORTE -->
+        <!-- VISTA: REPORTE (Padding reducido en móvil) -->
         <div id="view-report" class="hidden absolute inset-0 overflow-auto bg-white">
-            <div class="max-w-4xl mx-auto p-8 min-h-screen">
+            <div class="max-w-4xl mx-auto p-4 md:p-8 min-h-screen">
                 
                 <!-- IMAGEN DE ENCABEZADO -->
                 <div class="mb-6 w-full flex justify-center">
-                    <img id="header-img" src="img/Encabezado.png" alt="Encabezado Institucional" class="h-32 object-contain" onerror="this.style.display='none'">
+                    <img id="header-img" src="img/Encabezado.png" alt="Encabezado Institucional" class="h-24 md:h-32 object-contain" onerror="this.style.display='none'">
                 </div>
 
                 <!-- Encabezado del Reporte -->
                 <div class="border-b-4 border-psych-blue pb-6 mb-8">
-                    <div class="flex justify-between items-start mb-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start mb-4 gap-4 md:gap-0">
                         <div>
-                            <h1 class="text-3xl font-bold text-psych-blue uppercase tracking-tight">Reporte Académico</h1>
-                            <h2 class="text-xl text-psych-red font-medium">Psicología - UAGRM</h2>
+                            <h1 class="text-2xl md:text-3xl font-bold text-psych-blue uppercase tracking-tight">Reporte Académico</h1>
+                            <h2 class="text-lg md:text-xl text-psych-red font-medium">Psicología - UAGRM</h2>
                         </div>
-                        <div class="text-right">
+                        <div class="text-left md:text-right">
                             <div class="text-sm text-slate-500 font-medium">Fecha de Emisión</div>
                             <div class="text-lg font-bold text-slate-800" id="report-date"></div>
                         </div>
                     </div>
 
-                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 print-clean-container">
+                    <div class="bg-slate-50 p-4 md:p-6 rounded-xl border border-slate-200 print-clean-container">
                         <h3 class="text-sm font-bold text-psych-blue uppercase mb-4 tracking-wider no-print">Datos del Estudiante</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print:gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 print:gap-4">
                             <div class="space-y-1">
                                 <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="user" class="w-3 h-3 no-print"></i> 1.- Nombre Completo</label>
                                 <input type="text" id="input-name" placeholder="Ej. Juan Pérez" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-bold focus:ring-2 focus:ring-psych-blue focus:outline-none" oninput="syncInputs(this.value, 'name')">
@@ -195,21 +193,21 @@
                             </div>
                             <div class="space-y-1">
                                 <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3 no-print"></i> 3.- Número de celular</label>
-                                <input type="text" id="input-phone" placeholder="Ej. 70000000" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
+                                <input type="number" inputmode="numeric" id="input-phone" placeholder="Ej. 70000000" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
                             </div>
                             <div class="space-y-1">
                                 <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3 no-print"></i> 4.- Correo Electrónico</label>
-                                <input type="text" id="input-email" placeholder="Ej. estudiante@uagrm.edu.bo" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
+                                <input type="email" id="input-email" placeholder="Ej. estudiante@uagrm.edu.bo" class="w-full bg-white border border-slate-300 rounded px-3 py-2 text-slate-900 font-medium focus:ring-2 focus:ring-psych-blue focus:outline-none">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Estadísticas Automáticas -->
+                <!-- Estadísticas Automáticas (Grid adaptado) -->
                 <div class="mb-8">
                     <h3 class="text-sm font-bold text-slate-500 uppercase mb-3 tracking-wider">Estado Académico Actual</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
-                        <!-- Nivel Alcanzado -->
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-4">
+                        <!-- Nivel Alcanzado (Full width en móvil para destacar) -->
                         <div class="col-span-2 md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100 text-center flex flex-col justify-center print-clean-container shadow-sm relative overflow-hidden">
                             <span id="stat-max-semester" class="text-3xl font-black text-psych-blue">1º Sem</span>
                             <span class="text-[10px] text-slate-500 uppercase font-bold mt-1">Nivel Actual</span>
@@ -217,21 +215,21 @@
                                 <span id="stat-leveling-status" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Calculando...</span>
                             </div>
                         </div>
-                        <!-- Avance -->
+                        <!-- Avance (Full width en móvil row 2) -->
                         <div class="col-span-2 md:col-span-1 bg-white p-4 rounded-lg border border-slate-200 text-center flex flex-col justify-center print-clean-container">
                             <span id="stat-progress" class="text-3xl font-black text-slate-700">0%</span>
                             <span class="text-[10px] text-slate-400 uppercase font-bold mt-1">Avance</span>
                         </div>
-                        <!-- Contadores -->
-                        <div class="bg-white p-3 rounded-lg border border-emerald-100 shadow-sm flex flex-col items-center justify-center print-clean-container">
+                        <!-- Contadores (Grid pequeño) -->
+                        <div class="col-span-1 md:col-span-1 bg-white p-3 rounded-lg border border-emerald-100 shadow-sm flex flex-col items-center justify-center print-clean-container">
                             <span id="stat-approved" class="text-2xl font-bold text-emerald-600">0</span>
                             <span class="text-xs text-slate-600 font-medium">Aprob.</span>
                         </div>
-                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col items-center justify-center">
+                        <div class="col-span-1 md:col-span-1 bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col items-center justify-center">
                             <span id="stat-pending" class="text-2xl font-bold text-slate-500">67</span>
                             <span class="text-xs text-slate-600 font-medium">Pend.</span>
                         </div>
-                        <div class="bg-white p-3 rounded-lg border border-red-100 shadow-sm flex flex-col items-center justify-center print-clean-container">
+                        <div class="col-span-2 md:col-span-1 bg-white p-3 rounded-lg border border-red-100 shadow-sm flex flex-col items-center justify-center print-clean-container">
                             <span id="stat-failed" class="text-2xl font-bold text-psych-red">0</span>
                             <span class="text-xs text-slate-600 font-medium">Reprob.</span>
                         </div>
@@ -240,12 +238,12 @@
 
                 <!-- DIAGNÓSTICO INSTITUCIONAL FORMAL -->
                 <div class="mb-8 break-inside-avoid print:break-before-page">
-                    <div class="bg-slate-50 border-2 border-slate-200 rounded-xl p-8 relative shadow-sm">
+                    <div class="bg-slate-50 border-2 border-slate-200 rounded-xl p-4 md:p-8 relative shadow-sm">
                         <!-- Título & Objetivo -->
                         <div class="mb-8 border-b-2 border-psych-blue pb-6">
-                            <h2 class="text-2xl font-bold text-psych-blue text-center mb-4 uppercase tracking-tight">Encuesta para Estudiantes sobre Situación Académica y Transición al Nuevo Currículo</h2>
+                            <h2 class="text-xl md:text-2xl font-bold text-psych-blue text-center mb-4 uppercase tracking-tight">Encuesta Estudiantil</h2>
                             <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-psych-blue">
-                                <p class="text-sm text-slate-700 text-justify">
+                                <p class="text-xs md:text-sm text-slate-700 text-justify">
                                     <span class="font-bold text-psych-blue">OBJETIVO:</span> Conocer tu situación actual, tus percepciones sobre el proceso de transición curricular y tus preferencias respecto a las medidas de adaptación.
                                 </p>
                             </div>
@@ -253,13 +251,13 @@
 
                         <!-- Sección 1 -->
                         <div class="mb-8">
-                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 1.- Datos Generales / Situación Actual</h3>
-                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6 border-l border-r border-b border-slate-200">
+                            <h3 class="text-xs md:text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 1.- Datos Generales</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-4 md:p-6 rounded-b-lg rounded-tr-lg shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6 border-l border-r border-b border-slate-200">
                                 
                                 <div class="md:col-span-2">
                                     <p class="text-xs text-slate-500 italic flex items-center gap-1">
                                         <i data-lucide="info" class="w-3 h-3"></i>
-                                        Las preguntas 1 a 5 se completan automáticamente con los datos del encabezado y el cálculo del sistema.
+                                        Las preguntas 1 a 5 se completan automáticamente con los datos del encabezado.
                                     </p>
                                 </div>
                                 
@@ -267,8 +265,8 @@
                                 <div>
                                     <label class="block text-sm font-bold text-slate-800 mb-2">6.- Carga académica registrada este semestre:</label>
                                     <div class="flex items-center gap-3 bg-slate-50 p-2 rounded border border-slate-200">
-                                        <span class="text-xs font-semibold text-slate-600 uppercase">• Número de materias inscritas:</span>
-                                        <input type="number" id="survey-q6" class="w-20 border-b-2 border-slate-300 focus:border-psych-blue text-center text-sm font-bold text-psych-blue focus:outline-none bg-transparent" placeholder="#">
+                                        <span class="text-xs font-semibold text-slate-600 uppercase flex-1">• Número de materias inscritas:</span>
+                                        <input type="number" inputmode="numeric" id="survey-q6" class="w-16 border-b-2 border-slate-300 focus:border-psych-blue text-center text-sm font-bold text-psych-blue focus:outline-none bg-transparent" placeholder="#">
                                     </div>
                                 </div>
 
@@ -286,15 +284,15 @@
 
                                 <!-- Q8 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">8.- ¿Cuántas horas al día puedes dedicar al estudio?</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">8.- ¿Cuántas horas al día estudias?</label>
                                     <div class="bg-slate-50 p-2 rounded border border-slate-200">
-                                        <input type="number" id="survey-q8" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700" placeholder="Indicar número">
+                                        <input type="number" inputmode="numeric" id="survey-q8" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700" placeholder="Indicar número">
                                     </div>
                                 </div>
 
                                 <!-- Q9 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">9.- Estado general de avance académico:</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">9.- Estado general de avance:</label>
                                     <div class="bg-slate-50 p-2 rounded border border-slate-200">
                                         <select id="survey-q9" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
                                             <option value="" disabled selected>Selecciona una opción...</option>
@@ -310,18 +308,18 @@
 
                         <!-- Sección 3 -->
                         <div class="mb-8">
-                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 3.- Materias Atrasadas (Troncales / Electivas)</h3>
-                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm border-l border-r border-b border-slate-200">
+                            <h3 class="text-xs md:text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 3.- Materias Atrasadas</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-4 md:p-6 rounded-b-lg rounded-tr-lg shadow-sm border-l border-r border-b border-slate-200">
                                  <p class="text-xs text-slate-500 italic mb-4 flex items-center gap-1">
                                     <i data-lucide="info" class="w-3 h-3"></i>
-                                    Las preguntas 11 y 12 (listado de materias pendientes) son generadas automáticamente por el reporte de la Malla Interactiva.
+                                    Listado automático según reporte.
                                  </p>
                                  <!-- Q13 -->
                                  <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">13.- ¿Estas materias afectan tu avance hacia el nuevo currículo?</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">13.- ¿Afectan tu avance hacia el nuevo currículo?</label>
                                     <div class="bg-slate-50 p-3 rounded border border-slate-200">
                                         <select id="survey-q13" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 mb-3 font-medium text-slate-700" onchange="toggleDepende(this)">
-                                            <option value="" disabled selected>Selecciona una opción...</option>
+                                            <option value="" disabled selected>Selecciona...</option>
                                             <option value="Sí">Sí</option>
                                             <option value="No">No</option>
                                             <option value="No sé">No sé</option>
@@ -335,32 +333,32 @@
 
                         <!-- Sección 5 -->
                         <div class="mb-8">
-                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 5.- Expectativas frente al Nuevo Currículo</h3>
-                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm space-y-6 border-l border-r border-b border-slate-200">
+                            <h3 class="text-xs md:text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 5.- Expectativas</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-4 md:p-6 rounded-b-lg rounded-tr-lg shadow-sm space-y-6 border-l border-r border-b border-slate-200">
                                 <!-- Q16 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">16.- ¿Cómo te sientes respecto a la implementación del nuevo currículo?</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">16.- ¿Cómo te sientes respecto a la implementación?</label>
                                     <div class="bg-slate-50 p-3 rounded border border-slate-200">
                                         <select id="survey-q16" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
-                                            <option value="" disabled selected>Selecciona una opción...</option>
-                                            <option value="Motivado">Motivado(a): lo veo como una oportunidad para mejorar la formación.</option>
-                                            <option value="Cauteloso">Cauteloso(a): prefiero observar cómo se desarrolla antes de opinar.</option>
-                                            <option value="Preocupado">Preocupado(a): temo que afecte mi avance académico.</option>
-                                            <option value="Indiferente">Indiferente: no creo que cambie mucho mi situación.</option>
-                                            <option value="Confundido">Confundido(a): aún no comprendo bien el nuevo plan.</option>
+                                            <option value="" disabled selected>Selecciona...</option>
+                                            <option value="Motivado">Motivado(a)</option>
+                                            <option value="Cauteloso">Cauteloso(a)</option>
+                                            <option value="Preocupado">Preocupado(a)</option>
+                                            <option value="Indiferente">Indiferente</option>
+                                            <option value="Confundido">Confundido(a)</option>
                                         </select>
                                     </div>
                                 </div>
                                 <!-- Q17 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">17.- ¿Qué crees que aportará el nuevo currículo?</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">17.- ¿Qué crees que aportará?</label>
                                     <div class="bg-slate-50 p-3 rounded border border-slate-200">
                                         <select id="survey-q17" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 mb-3 font-medium text-slate-700" onchange="toggleOtro(this, 'other-17')">
-                                            <option value="" disabled selected>Selecciona una opción...</option>
-                                            <option value="Organización">Mejor organización del avance académico</option>
-                                            <option value="Secuencias">Secuencias más claras y lógicas de contenido</option>
+                                            <option value="" disabled selected>Selecciona...</option>
+                                            <option value="Organización">Mejor organización</option>
+                                            <option value="Secuencias">Secuencias más claras</option>
                                             <option value="Flexibilidad">Mayor flexibilidad</option>
-                                            <option value="Claridad">Claridad en perfiles y competencias</option>
+                                            <option value="Claridad">Claridad en perfiles</option>
                                             <option value="Ninguna">Ninguna de las anteriores</option>
                                             <option value="Otro">Otra opinión</option>
                                         </select>
@@ -372,17 +370,17 @@
 
                         <!-- Sección 6 -->
                         <div class="mb-8">
-                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 6.- Medidas de Transición Preferidas</h3>
-                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm space-y-6 border-l border-r border-b border-slate-200">
+                            <h3 class="text-xs md:text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 6.- Transición</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-4 md:p-6 rounded-b-lg rounded-tr-lg shadow-sm space-y-6 border-l border-r border-b border-slate-200">
                                 <!-- Q18 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-3">18.- Medidas que consideras útiles para tu avance (selección múltiple):</label>
-                                    <div id="survey-q18-container" class="space-y-2 ml-2 bg-slate-50 p-4 rounded border border-slate-200">
-                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos verano" class="accent-psych-blue w-4 h-4"> Cursos de verano intensivos (para adelantar o recuperar)</label>
-                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Semestres igualacion" class="accent-psych-blue w-4 h-4"> Semestres de igualación sin prerrequisitos</label>
-                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos nivelacion" class="accent-psych-blue w-4 h-4"> Cursos especiales de nivelación en el semestre</label>
-                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Tutorias" class="accent-psych-blue w-4 h-4"> Tutorías académicas personalizadas</label>
-                                        <label class="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Flexibilidad prerrequisitos" class="accent-psych-blue w-4 h-4"> Adaptación flexible de prerrequisitos por única vez</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-3">18.- Medidas útiles (selección múltiple):</label>
+                                    <div id="survey-q18-container" class="space-y-2 ml-1 md:ml-2 bg-slate-50 p-3 md:p-4 rounded border border-slate-200">
+                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos verano" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Cursos de verano intensivos</span></label>
+                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Semestres igualacion" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Semestres de igualación</span></label>
+                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Cursos nivelacion" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Cursos especiales de nivelación</span></label>
+                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Tutorias" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Tutorías académicas personalizadas</span></label>
+                                        <label class="flex items-start md:items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer hover:bg-white p-1 rounded transition-colors"><input type="checkbox" value="Flexibilidad prerrequisitos" class="accent-psych-blue w-4 h-4 mt-0.5 md:mt-0"> <span class="leading-tight">Flexibilidad de prerrequisitos</span></label>
                                         <div class="pt-2">
                                             <label class="flex items-center gap-3 text-sm text-slate-700 font-medium mb-1"><input type="checkbox" id="q18-other-check" value="Otro" class="accent-psych-blue w-4 h-4"> Otros:</label>
                                             <input type="text" id="q18-other-text" class="w-full border-b border-slate-300 text-sm italic ml-7 focus:outline-none focus:border-psych-blue bg-transparent" placeholder="Especifique...">
@@ -391,15 +389,15 @@
                                 </div>
                                 <!-- Q19 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">19.- De esas medidas que consideras útiles para tu avance cual sería Prioridad absoluta (elige solo una):</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">19.- Prioridad absoluta (elige una):</label>
                                     <div class="bg-slate-50 p-3 rounded border border-slate-200">
                                         <select id="survey-q19" class="w-full border-b-2 border-slate-300 focus:border-psych-blue text-sm focus:outline-none bg-transparent py-1 font-medium text-slate-700">
-                                            <option value="" disabled selected>Selecciona una opción...</option>
-                                            <option value="Verano">Cursos de verano intensivos</option>
-                                            <option value="Igualación">Semestres de igualación sin prerrequisitos</option>
-                                            <option value="Nivelación">Cursos especiales de nivelación</option>
-                                            <option value="Tutorías">Tutorías académicas personalizadas</option>
-                                            <option value="Flexibilidad">Adaptación flexible de prerrequisitos</option>
+                                            <option value="" disabled selected>Selecciona...</option>
+                                            <option value="Verano">Cursos de verano</option>
+                                            <option value="Igualación">Semestres de igualación</option>
+                                            <option value="Nivelación">Cursos de nivelación</option>
+                                            <option value="Tutorías">Tutorías académicas</option>
+                                            <option value="Flexibilidad">Flexibilidad prerrequisitos</option>
                                             <option value="Otro">Otro</option>
                                         </select>
                                     </div>
@@ -409,11 +407,11 @@
 
                         <!-- Sección 7 -->
                         <div class="mb-4">
-                            <h3 class="text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 7.- Comentarios Finales</h3>
-                            <div class="border-t-2 border-psych-blue bg-white p-6 rounded-b-lg rounded-tr-lg shadow-sm border-l border-r border-b border-slate-200">
+                            <h3 class="text-xs md:text-sm font-bold text-white bg-psych-blue px-4 py-1.5 rounded-t-lg inline-block uppercase tracking-wider shadow-sm">Sección 7.- Comentarios</h3>
+                            <div class="border-t-2 border-psych-blue bg-white p-4 md:p-6 rounded-b-lg rounded-tr-lg shadow-sm border-l border-r border-b border-slate-200">
                                 <!-- Q20 -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-800 mb-2">20.- Propuesta para mejorar la transición (respuesta abierta):</label>
+                                    <label class="block text-sm font-bold text-slate-800 mb-2">20.- Propuesta de mejora:</label>
                                     <textarea id="survey-q20" rows="4" class="w-full border-2 border-slate-300 rounded-lg p-3 text-sm focus:border-psych-blue focus:outline-none focus:ring-1 focus:ring-blue-100 transition-all" placeholder="Escribe tu propuesta aquí..."></textarea>
                                 </div>
                             </div>
@@ -421,7 +419,7 @@
 
                         <!-- Footer del Formulario -->
                         <div class="mt-6 text-center no-print">
-                            <p class="text-xs text-slate-400 mb-4">Asegúrese de haber completado todos los campos requeridos antes de imprimir.</p>
+                            <p class="text-[10px] md:text-xs text-slate-400 mb-4">Complete todos los campos antes de descargar.</p>
                         </div>
                     </div>
                 </div>
@@ -431,24 +429,22 @@
 
                 <div class="mt-12 pt-8 border-t border-slate-300 flex justify-between text-xs text-slate-400">
                     <p>Generado por Psiconet</p>
-                    <p class="border-t border-slate-400 px-8 pt-1">Firma Director(a) de Carrera</p>
+                    <p class="border-t border-slate-400 px-8 pt-1">Firma Director(a)</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer id="footer-legend" class="no-print absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white px-6 py-3 rounded-full shadow-lg border border-slate-200 z-50 flex gap-6 items-center whitespace-nowrap">
-        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-2">Leyenda:</span>
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-white border-gray-300"></div><span class="text-xs text-slate-700">Pendiente</span></div>
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-amber-100 border-amber-500"></div><span class="text-xs text-slate-700">Cursando</span></div>
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-emerald-100 border-emerald-500"></div><span class="text-xs text-slate-700">Aprobada</span></div>
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-blue-100 border-blue-500"></div><span class="text-xs text-slate-700">Adelantada</span></div>
-        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border bg-red-100 border-psych-red"></div><span class="text-xs text-slate-700">Reprobada</span></div>
+    <footer id="footer-legend" class="no-print absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white px-4 py-2 md:px-6 md:py-3 rounded-full shadow-lg border border-slate-200 z-50 flex gap-4 md:gap-6 items-center whitespace-nowrap overflow-x-auto max-w-[90%] md:max-w-none no-scrollbar">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1 md:mr-2">Leyenda:</span>
+        <div class="flex items-center gap-1.5 md:gap-2"><div class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border bg-white border-gray-300"></div><span class="text-[10px] md:text-xs text-slate-700">Pendiente</span></div>
+        <div class="flex items-center gap-1.5 md:gap-2"><div class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border bg-amber-100 border-amber-500"></div><span class="text-[10px] md:text-xs text-slate-700">Cursando</span></div>
+        <div class="flex items-center gap-1.5 md:gap-2"><div class="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border bg-emerald-100 border-emerald-500"></div><span class="text-[10px] md:text-xs text-slate-700">Aprobada</span></div>
     </footer>
 
-    <!-- MODAL DE DESCARGA -->
+    <!-- MODAL DE DESCARGA (Responsivo) -->
     <div id="download-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 no-print">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 m-4">
             <!-- Modal Header -->
             <div class="bg-psych-blue p-4 flex items-center justify-between">
                 <h3 class="text-white font-bold text-lg flex items-center gap-2">
@@ -459,7 +455,7 @@
                 </button>
             </div>
             <!-- Modal Body -->
-            <div class="p-6">
+            <div class="p-4 md:p-6 max-h-[80vh] overflow-y-auto">
                 <!-- PASO 1: GUARDAR DATOS -->
                 <div class="bg-blue-50 border-l-4 border-psych-blue p-4 rounded mb-6 shadow-sm">
                     <h4 class="text-psych-blue font-bold text-sm mb-2 uppercase flex items-center gap-2">
@@ -467,9 +463,9 @@
                         Registrar Datos
                     </h4>
                     <p class="text-xs text-slate-600 mb-3">
-                        Antes de generar el PDF, por favor guarda tu reporte en nuestra base de datos para que sea válido.
+                        Guarda tu reporte en nuestra base de datos.
                     </p>
-                    <button id="btn-send-sheets" onclick="sendToGoogleSheets()" class="w-full flex justify-center items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors shadow-sm font-bold text-sm">
+                    <button id="btn-send-sheets" onclick="sendToGoogleSheets()" class="w-full flex justify-center items-center gap-2 bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors shadow-sm font-bold text-sm active:scale-95">
                         <i data-lucide="sheet" class="w-4 h-4"></i> Guardar en Sheets
                     </button>
                 </div>
@@ -481,17 +477,17 @@
                         Descargar y Enviar
                     </h4>
                     <p class="text-slate-600 text-xs leading-relaxed mb-4">
-                        Descarga el PDF y envíalo a uno de los números encargados indicando tu <strong>Nombre Completo y Registro</strong>.
+                        Descarga el PDF y envíalo indicando tu <strong>Nombre Completo y Registro</strong>.
                     </p>
                     
                     <div class="space-y-2">
-                        <a href="https://wa.me/59160904656" target="_blank" class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:border-green-500 hover:bg-green-50 group transition-all">
+                        <a href="https://wa.me/59160904656" target="_blank" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-green-500 hover:bg-green-50 group transition-all active:bg-green-100">
                             <span class="flex items-center gap-2 text-slate-700 text-xs font-medium group-hover:text-green-700">
                                 <i data-lucide="message-circle" class="w-4 h-4 text-green-600"></i> +591 60904656
                             </span>
                             <i data-lucide="external-link" class="w-3 h-3 text-slate-400 group-hover:text-green-600"></i>
                         </a>
-                        <a href="https://wa.me/59162829160" target="_blank" class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:border-green-500 hover:bg-green-50 group transition-all">
+                        <a href="https://wa.me/59162829160" target="_blank" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-green-500 hover:bg-green-50 group transition-all active:bg-green-100">
                             <span class="flex items-center gap-2 text-slate-700 text-xs font-medium group-hover:text-green-700">
                                 <i data-lucide="message-circle" class="w-4 h-4 text-green-600"></i> +591 62829160
                             </span>
@@ -505,7 +501,7 @@
                 <button onclick="closeDownloadModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors">
                     Cancelar
                 </button>
-                <button onclick="confirmDownload()" class="px-4 py-2 text-sm font-bold text-white bg-psych-blue rounded hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-2">
+                <button onclick="confirmDownload()" class="px-4 py-2 text-sm font-bold text-white bg-psych-blue rounded hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-2 active:scale-95">
                     <i data-lucide="file-down" class="w-4 h-4"></i> Descargar PDF
                 </button>
             </div>
@@ -516,7 +512,9 @@
         // ==========================================
         // CONFIGURACIÓN DE GOOGLE SHEETS
         // ==========================================
+        //  ↓↓↓  ¡¡¡ PEGA TU URL DE APPS SCRIPT AQUÍ ABAJO !!!  ↓↓↓
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxgejJxR6gL8coGxPwH2OBd2FYyCxp0YYvyb-Q3muo7XjDrM_DXDD-fEuYLNQ-LAldy/exec"; 
+        //  ↑↑↑  Ejemplo: "https://script.google.com/macros/s/AKfy.../exec"
         // ==========================================
 
         const REQUIREMENTS = { TRONCALES_TOTAL: 59, ELECTIVES_NEEDED: 4, TALLERES_NEEDED: 4, TOTAL_SUBJECTS_DEGREE: 67, TOTAL_SEMESTERS: 10 };
@@ -569,16 +567,16 @@
             container.innerHTML = '';
             semestersData.forEach(sem => {
                 const col = document.createElement('div');
-                col.className = 'flex flex-col w-56 gap-4';
+                col.className = 'flex flex-col w-40 md:w-56 gap-3 md:gap-4 flex-shrink-0';
                 col.innerHTML = `
-                    <div class="text-center py-2 bg-psych-blue text-white rounded-t-lg font-bold shadow-md sticky top-0 z-20">
+                    <div class="text-center py-1.5 md:py-2 bg-psych-blue text-white rounded-t-lg font-bold shadow-md sticky top-0 z-20 text-xs md:text-base">
                         ${sem.name}
-                        ${sem.id === 11 ? `<div class="text-[10px] font-normal opacity-80 mt-1" id="map-header-ele">0/4 Completadas</div>` : ''}
-                        ${sem.id === 12 ? `<div class="text-[10px] font-normal opacity-80 mt-1" id="map-header-tal">0/4 Completados</div>` : ''}
+                        ${sem.id === 11 ? `<div class="text-[9px] md:text-[10px] font-normal opacity-80 mt-1" id="map-header-ele">0/4 Completadas</div>` : ''}
+                        ${sem.id === 12 ? `<div class="text-[9px] md:text-[10px] font-normal opacity-80 mt-1" id="map-header-tal">0/4 Completados</div>` : ''}
                     </div>
                 `;
                 const subjectsContainer = document.createElement('div');
-                subjectsContainer.className = 'flex flex-col gap-6 pt-4';
+                subjectsContainer.className = 'flex flex-col gap-3 md:gap-6 pt-2 md:pt-4';
                 sem.subjects.forEach(sub => {
                     const card = document.createElement('div');
                     card.id = `subject-${sub.id}`;
@@ -588,12 +586,12 @@
                     card.onmouseleave = () => handleMouseLeave();
                     card.innerHTML = `
                         <div class="flex justify-between items-start mb-1 pointer-events-none">
-                            <span class="text-[9px] font-bold opacity-60 bg-gray-200 px-1 rounded text-slate-700">${sub.id}</span>
-                            <i data-lucide="${STATUS_TYPES['pending'].icon}" class="w-3.5 h-3.5 icon-status"></i>
+                            <span class="text-[8px] md:text-[9px] font-bold opacity-60 bg-gray-200 px-1 rounded text-slate-700">${sub.id}</span>
+                            <i data-lucide="${STATUS_TYPES['pending'].icon}" class="w-3 h-3 md:w-3.5 md:h-3.5 icon-status"></i>
                         </div>
-                        <h3 class="text-xs font-bold leading-tight min-h-[40px] flex items-center pointer-events-none">${sub.name}</h3>
+                        <h3 class="text-[10px] md:text-xs font-bold leading-tight min-h-[32px] md:min-h-[40px] flex items-center pointer-events-none">${sub.name}</h3>
                         <div class="mt-1 flex justify-end pointer-events-none">
-                            <span class="text-[9px] px-2 py-0.5 rounded-full border ${getTypeStyle(sub.type)}">${getTypeLabel(sub.type)}</span>
+                            <span class="text-[8px] md:text-[9px] px-1.5 py-0.5 rounded-full border ${getTypeStyle(sub.type)}">${getTypeLabel(sub.type)}</span>
                         </div>
                     `;
                     subjectsContainer.appendChild(card);
@@ -613,7 +611,7 @@
                 if(sem.id === 11) extraInfo = `<span class="text-xs font-normal text-slate-500" id="rep-header-ele">Completado: 0/4</span>`;
                 if(sem.id === 12) extraInfo = `<span class="text-xs font-normal text-slate-500" id="rep-header-tal">Completado: 0/4</span>`;
                 block.innerHTML = `
-                    <h3 class="text-sm font-bold bg-slate-100 text-psych-blue py-1 px-3 mb-2 border-l-4 border-psych-blue uppercase print:bg-slate-200 flex justify-between">
+                    <h3 class="text-xs md:text-sm font-bold bg-slate-100 text-psych-blue py-1 px-3 mb-2 border-l-4 border-psych-blue uppercase print:bg-slate-200 flex justify-between">
                         <span>${sem.name}</span>
                         ${extraInfo}
                     </h3>
@@ -642,15 +640,20 @@
         }
         
         function handleMouseEnter(id) {
-            hoveredSubject = id;
-            updateOpacity();
-            updateLinesOpacity();
+            // Deshabilitar hover en pantallas táctiles para evitar "pegajosidad"
+            if (window.matchMedia("(hover: hover)").matches) {
+                hoveredSubject = id;
+                updateOpacity();
+                updateLinesOpacity();
+            }
         }
         
         function handleMouseLeave() {
-            hoveredSubject = null;
-            updateOpacity();
-            updateLinesOpacity();
+            if (window.matchMedia("(hover: hover)").matches) {
+                hoveredSubject = null;
+                updateOpacity();
+                updateLinesOpacity();
+            }
         }
 
         function updateCardUI(id) {
@@ -666,7 +669,7 @@
                     newIcon.setAttribute('data-lucide', iconName);
                     // Adjust icons color
                     const iconColor = status === 'approved' ? 'text-emerald-600' : status === 'failed' ? 'text-psych-red' : status === 'advanced' ? 'text-blue-600' : 'text-slate-400';
-                    newIcon.className = `w-3.5 h-3.5 icon-status ${iconColor}`;
+                    newIcon.className = `w-3 h-3 md:w-3.5 md:h-3.5 icon-status ${iconColor}`;
                     iconContainer.replaceWith(newIcon);
                     lucide.createIcons();
                 }
@@ -684,11 +687,11 @@
                         const iconHtml = status !== 'pending' ? `<i data-lucide="${config.icon}" class="w-3 h-3 ${iconColor}"></i>` : '';
                         row.innerHTML = `
                             <div class="flex items-center gap-2">
-                                <span class="font-mono text-slate-400 w-16">${sub.id}</span>
-                                <span class="font-medium ${status !== 'pending' ? 'text-slate-900' : 'text-slate-500'}">${sub.name}</span>
+                                <span class="font-mono text-slate-400 w-12 md:w-16">${sub.id}</span>
+                                <span class="font-medium ${status !== 'pending' ? 'text-slate-900' : 'text-slate-500'} truncate max-w-[150px] md:max-w-none">${sub.name}</span>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="${config.printColor} font-semibold uppercase text-[10px]">${config.label}</span>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <span class="${config.printColor} font-semibold uppercase text-[9px] md:text-[10px]">${config.label}</span>
                                 ${iconHtml}
                             </div>
                         `;
@@ -701,7 +704,8 @@
         function getCardClasses(id, type) {
             const status = subjectStates[id] || 'pending';
             const config = STATUS_TYPES[status];
-            let classes = `relative p-3 rounded-lg border cursor-pointer shadow-sm transition-all duration-200 ${config.color} z-10`;
+            // Ajustado padding y tamaños para móvil
+            let classes = `relative p-2 md:p-3 rounded-lg border cursor-pointer shadow-sm transition-all duration-200 ${config.color} z-10`;
             // If default pending, add stronger border or shadow? No, keep clean.
             return classes;
         }
@@ -761,10 +765,10 @@
                                 const endX = endRect.left - parentRect.left;
                                 const endY = endRect.top + (endRect.height/2) - parentRect.top;
                                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                                const d = `M ${startX} ${startY} C ${startX + 60} ${startY}, ${endX - 60} ${endY}, ${endX} ${endY}`;
+                                const d = `M ${startX} ${startY} C ${startX + 30} ${startY}, ${endX - 30} ${endY}, ${endX} ${endY}`; // Curvatura ajustada para tarjetas más cercanas en móvil
                                 path.setAttribute("d", d);
                                 path.setAttribute("stroke", "#002855"); // Azul Institucional
-                                path.setAttribute("stroke-width", "3");
+                                path.setAttribute("stroke-width", "2"); // Líneas ligeramente más finas
                                 path.setAttribute("fill", "none");
                                 path.setAttribute("marker-end", "url(#arrowhead-active)");
                                 path.setAttribute("class", "transition-opacity duration-300 opacity-0");
@@ -892,8 +896,8 @@
                          debtText = debtSemesters.join('º, ') + 'º y ' + last + 'º';
                      }
                      
-                     debtStatusEl.textContent = `Tiene materias pendientes de: ${debtText}`;
-                     debtStatusEl.className = "text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full inline-block self-center bg-red-100 text-psych-red text-center"; // added text-center
+                     debtStatusEl.textContent = `Pendientes: ${debtText}`; // Texto más corto para móvil
+                     debtStatusEl.className = "text-[9px] md:text-[10px] font-bold mt-1 px-2 py-0.5 rounded-full inline-block self-center bg-red-100 text-psych-red text-center max-w-[150px] truncate"; 
                 }
             }
 
@@ -1067,7 +1071,7 @@
             const btn = document.getElementById('btn-send-sheets');
             const originalText = btn.innerHTML;
             
-            if (GOOGLE_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbxgejJxR6gL8coGxPwH2OBd2FYyCxp0YYvyb-Q3muo7XjDrM_DXDD-fEuYLNQ-LAldy/exec" || GOOGLE_SCRIPT_URL === "") {
+            if (GOOGLE_SCRIPT_URL === "PEGAR_TU_URL_AQUI" || GOOGLE_SCRIPT_URL === "") {
                 alert("Error: Debes configurar la URL de tu Google Script en el código HTML antes de enviar.");
                 return;
             }
@@ -1151,8 +1155,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
